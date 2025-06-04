@@ -1,0 +1,130 @@
+body {
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #eef1f5; /* Lighter grey background */
+    padding-top: 0; 
+    padding-bottom: 70px; /* Footer height + some margin */
+    line-height: 1.6;
+}
+
+.navbar {
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    background-color: #343a40 !important; /* Ensuring dark navbar */
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #ffffff !important;
+}
+
+.nav-link {
+    color: #f8f9fa !important;
+}
+
+.nav-link:hover {
+    color: #adb5bd !important;
+}
+
+.card-header {
+    font-weight: 600;
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+}
+
+.card-header.bg-primary {
+    background-color: #007bff !important;
+}
+
+.card-header.bg-success {
+    background-color: #28a745 !important;
+}
+
+.card {
+    border: 1px solid #dee2e6; /* Subtle border */
+    border-radius: 0.375rem; /* Bootstrap's default rounded corners */
+    transition: box-shadow .3s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.list-group-item {
+    border-left: 3px solid transparent;
+    transition: border-left-color .3s ease, background-color .3s ease;
+    padding: 1rem 1.25rem;
+}
+
+.list-group-item:hover {
+    border-left-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.list-group-item h5 a {
+    color: #0056b3; /* Darker blue for links */
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.list-group-item h5 a:hover {
+    text-decoration: underline;
+    color: #003d80;
+}
+
+.list-group-item p {
+    font-size: 0.95rem;
+    color: #495057; /* Darker grey for text */
+}
+
+.list-group-item .text-muted {
+    font-size: 0.85rem;
+    color: #6c757d !important;
+}
+
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #ffffff !important;
+    border-top: 1px solid #ced4da;
+    box-shadow: 0 -2px 5px rgba(0,0,0,.05);
+    padding: 1rem 0;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    font-weight: 500;
+    transition: background-color .15s ease-in-out, border-color .15s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+.btn-primary:focus, .btn-primary.focus {
+  box-shadow: 0 0 0 0.2rem rgba(38,143,255,.5);
+}
+
+.alert {
+    border-radius: .25rem;
+}
+
+/* Utility for icons in headers */
+.card-header i {
+    vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) { /* lg breakpoint */
+    .col-lg-4, .col-lg-8 {
+        margin-bottom: 1.5rem; /* Add space between columns when stacked */
+    }
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RentalHunter</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: .2em;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">RentalHunter</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/">Search <span class="sr-only">(current)</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4><i class="fas fa-search mr-2"></i>Search Parameters</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/" id="searchForm">
+                            <div class="form-group">
+                                <label for="price_min">Min Price ($)</label>
+                                <input type="number" class="form-control" id="price_min" name="price_min" placeholder="e.g., 1000" value="{{ search_params.get('price_min', '') }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="price_max">Max Price ($)</label>
+                                <input type="number" class="form-control" id="price_max" name="price_max" placeholder="e.g., 2500" value="{{ search_params.get('price_max', '') }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location (City/Town)</label>
+                                <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Ottawa" value="{{ search_params.get('location', 'ottawa') }}" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" id="searchButton">
+                                <span id="searchButtonText">Search Listings</span>
+                                <span id="searchButtonSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h4><i class="fas fa-list-ul mr-2"></i>Scraped Listings</h4>
+                    </div>
+                    <div class="card-body" id="resultsArea">
+                        {% if results %}
+                            <p class="text-muted small mb-2">Displaying {{ results|length }} listings.</p>
+                            <ul class="list-group list-group-flush">
+                                {% for result in results %}
+                                    <li class="list-group-item">
+                                        <h5><a href="{{ result.url }}" target="_blank" rel="noopener noreferrer">{{ result.title }}</a></h5>
+                                        <p class="mb-1">
+                                            <strong>Price:</strong> <span class="text-success font-weight-bold">{{ result.price }}</span> <br>
+                                            <strong>Location:</strong> {{ result.location }}
+                                        </p>
+                                        {% if result.description and result.description not in ['N/A', 'Please check scraper selectors.', 'Please verify search terms or scraper.', 'Kijiji structure might have changed or selectors need update.', 'No listings found.', 'Error fetching Kijiji', 'Scraping Error'] %}
+                                        <small class="text-muted">{{ result.description[:200] }}{% if result.description|length > 200 %}...{% endif %}</small>
+                                        {% elif result.description %}
+                                        <small class="text-danger"><em>Note: {{ result.description }}</em></small>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% elif request.method == 'POST' %}
+                            <div class="alert alert-warning text-center" role="alert">
+                                No listings found for your criteria, or an error occurred during scraping. Please try adjusting your search or try again later.
+                            </div>
+                        {% else %}
+                            <p class="text-center text-muted mt-3">Enter search parameters and click "Search Listings" to begin.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">RentalHunter &copy; {{ current_year }}</span>
+        </div>
+    </footer>
+
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> <!-- FontAwesome for icons -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

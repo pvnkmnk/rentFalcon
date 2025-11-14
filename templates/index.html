@@ -3,94 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RentalHunter</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Rental Scanner - Multi-Source Rental Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .spinner-border-sm {
-            width: 1rem;
-            height: 1rem;
-            border-width: .2em;
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+        }
+
+        .results-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .listing-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .listing-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .source-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-kijiji {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-realtor_ca {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .badge-rentals_ca {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+
+        .price-tag {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .property-details {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .property-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+        }
+
+        .filter-btn {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .error-alert {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .warning-alert {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            background: white;
+            border-top: 1px solid #e2e8f0;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5></h5>Searching multiple sources...</h5>
+            <p class="text-muted mb-0">This may take 5-10 seconds</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/">RentalHunter</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-home me-2"></i>
+                <strong>Rental Scanner</strong>
+                <span class="badge bg-light text-primary ms-2">v2.1</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/">Search <span class="sr-only">(current)</span></a>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#stats">
+                            <i class="fas fa-chart-bar me-1"></i> Statistics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/health" target="_blank">
+                            <i class="fas fa-heartbeat me-1"></i> Status
+                        </a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
+    <!-- Main Content -->
     <div class="container">
         <div class="row">
-            <div class="col-lg-4">
-                <div class="card shadow-sm mb-4">
+            <!-- Search Sidebar -->
+            <div class="col-lg-4 mb-4">
+                <div class="search-card card">
                     <div class="card-header bg-primary text-white">
-                        <h4><i class="fas fa-search mr-2"></i>Search Parameters</h4>
+                        <h5 class="mb-0">
+                            <i class="fas fa-search me-2"></i>
+                            Search Rentals
+                        </h5>
                     </div>
                     <div class="card-body">
                         <form method="POST" action="/" id="searchForm">
-                            <div class="form-group">
-                                <label for="price_min">Min Price ($)</label>
-                                <input type="number" class="form-control" id="price_min" name="price_min" placeholder="e.g., 1000" value="{{ search_params.get('price_min', '') }}">
+                            <div class="mb-3">
+                                <label for="location" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i> Location
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="location"
+                                       name="location"
+                                       placeholder="e.g., Newmarket, Aurora, Richmond Hill, Bradford"
+                                       value="{{ search_params.get('location', 'newmarket') }}"
+                                       required>
+                                <small class="text-muted">Enter Newmarket or nearby cities (Aurora, East Gwillimbury, Bradford, Richmond Hill, Markham, Vaughan, King City)</small>
                             </div>
-                            <div class="form-group">
-                                <label for="price_max">Max Price ($)</label>
-                                <input type="number" class="form-control" id="price_max" name="price_max" placeholder="e.g., 2500" value="{{ search_params.get('price_max', '') }}">
+
+                            <div class="mb-3">
+                                <label for="price_min" class="form-label">
+                                    <i class="fas fa-dollar-sign me-1"></i> Min Price ($/month)
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="price_min"
+                                       name="price_min"
+                                       placeholder="e.g., 1000"
+                                       value="{{ search_params.get('price_min', '') }}"
+                                       min="0">
                             </div>
-                            <div class="form-group">
-                                <label for="location">Location (City/Town)</label>
-                                <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Ottawa" value="{{ search_params.get('location', 'ottawa') }}" required>
+
+                            <div class="mb-3">
+                                <label for="price_max" class="form-label">
+                                    <i class="fas fa-dollar-sign me-1"></i> Max Price ($/month)
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="price_max"
+                                       name="price_max"
+                                       placeholder="e.g., 2500"
+                                       value="{{ search_params.get('price_max', '') }}"
+                                       min="0">
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block" id="searchButton">
-                                <span id="searchButtonText">Search Listings</span>
-                                <span id="searchButtonSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-3">
+                                <i class="fas fa-search me-2"></i>
+                                Search All Sources
                             </button>
                         </form>
+
+                        <!-- Active Sources -->
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-database me-1"></i> Active Sources
+                            </h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% if enabled_scrapers %}
+                                    {% for scraper in enabled_scrapers %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            {{ scraper|replace('_', '.')|title }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="badge bg-warning">No scrapers enabled</span>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Results Area -->
             <div class="col-lg-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-success text-white">
-                        <h4><i class="fas fa-list-ul mr-2"></i>Scraped Listings</h4>
+                {% if error %}
+                <!-- Error Message -->
+                <div class="alert alert-danger error-alert" role="alert">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Error
+                    </h5>
+                    <p class="mb-0">{{ error }}</p>
+                </div>
+                {% endif %}
+
+                {% if stats %}
+                <!-- Statistics -->
+                <div id="stats" class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.unique_listings }}</div>
+                            <div class="stat-label">Unique Listings</div>
+                        </div>
                     </div>
-                    <div class="card-body" id="resultsArea">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.scrapers_succeeded }}</div>
+                            <div class="stat-label">Sources Used</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ stats.duplicates_removed }}</div>
+                            <div class="stat-label">Duplicates Removed</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ "%.1f"|format(stats.execution_time) }}s</div>
+                            <div class="stat-label">Search Time</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Source Breakdown -->
+                {% if stats.by_source %}
+                <div class="alert alert-info mb-4">
+                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>Results by Source:</h6>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for source, count in stats.by_source.items() %}
+                            <span>
+                                <strong>{{ source|replace('_', '.')|title }}:</strong> {{ count }} listings
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Errors -->
+                {% if errors %}
+                <div class="alert alert-warning warning-alert mb-4" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-circle me-2"></i>Some Sources Failed
+                    </h6>
+                    <ul class="mb-0">
+                        {% for scraper, error_msg in errors.items() %}
+                            <li><strong>{{ scraper|replace('_', '.')|title }}:</strong> {{ error_msg }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <!-- Listings -->
+                <div class="results-card card">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                {% if results %}
+                                    {{ results|length }} Listings Found
+                                {% else %}
+                                    Rental Listings
+                                {% endif %}
+                            </h5>
+                            {% if results and results|length > 0 %}
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="sortListings('price')">
+                                    <i class="fas fa-sort-amount-down me-1"></i>Price
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="filterBySource('all')">
+                                    <i class="fas fa-filter me-1"></i>All
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
                         {% if results %}
-                            <p class="text-muted small mb-2">Displaying {{ results|length }} listings.</p>
-                            <ul class="list-group list-group-flush">
-                                {% for result in results %}
-                                    <li class="list-group-item">
-                                        <h5><a href="{{ result.url }}" target="_blank" rel="noopener noreferrer">{{ result.title }}</a></h5>
-                                        <p class="mb-1">
-                                            <strong>Price:</strong> <span class="text-success font-weight-bold">{{ result.price }}</span> <br>
-                                            <strong>Location:</strong> {{ result.location }}
-                                        </p>
-                                        {% if result.description and result.description not in ['N/A', 'Please check scraper selectors.', 'Please verify search terms or scraper.', 'Kijiji structure might have changed or selectors need update.', 'No listings found.', 'Error fetching Kijiji', 'Scraping Error'] %}
-                                        <small class="text-muted">{{ result.description[:200] }}{% if result.description|length > 200 %}...{% endif %}</small>
-                                        {% elif result.description %}
-                                        <small class="text-danger"><em>Note: {{ result.description }}</em></small>
-                                        {% endif %}
-                                    </li>
-                                {% endfor %}
-                            </ul>
+                            {% for listing in results %}
+                            <div class="listing-card" data-source="{{ listing.source }}" data-price="{{ listing.price }}">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1">
+                                            <a href="{{ listing.url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-dark">
+                                                {{ listing.title }}
+                                            </a>
+                                        </h5>
+                                        <span class="source-badge badge-{{ listing.source }}">
+                                            {{ listing.source|replace('_', '.')|upper }}
+                                        </span>
+                                    </div>
+                                    <div class="price-tag ms-3">
+                                        ${{ "%.2f"|format(listing.price) }}
+                                        <small class="text-muted" style="font-size: 0.6em;">/mo</small>
+                                    </div>
+                                </div>
+
+                                <!-- Property Details -->
+                                <div class="property-details">
+                                    {% if listing.bedrooms %}
+                                    <div class="property-detail">
+                                        <i class="fas fa-bed"></i>
+                                        <span>{{ listing.bedrooms }} Bed</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if listing.bathrooms %}
+                                    <div class="property-detail">
+                                        <i class="fas fa-bath"></i>
+                                        <span>{{ listing.bathrooms }} Bath</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if listing.square_feet %}
+                                    <div class="property-detail">
+                                        <i class="fas fa-ruler-combined"></i>
+                                        <span>{{ listing.square_feet }} sq ft</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if listing.location %}
+                                    <div class="property-detail">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>{{ listing.location }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Description -->
+                                {% if listing.description %}
+                                <p class="text-muted mt-2 mb-0" style="font-size: 0.9rem;">
+                                    {{ listing.description[:200] }}{% if listing.description|length > 200 %}...{% endif %}
+                                </p>
+                                {% endif %}
+
+                                <!-- View Button -->
+                                <div class="mt-3">
+                                    <a href="{{ listing.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt me-1"></i> View Listing
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
                         {% elif request.method == 'POST' %}
-                            <div class="alert alert-warning text-center" role="alert">
-                                No listings found for your criteria, or an error occurred during scraping. Please try adjusting your search or try again later.
+                            <div class="text-center py-5">
+                                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No listings found</h5>
+                                <p class="text-muted">Try adjusting your search criteria</p>
                             </div>
                         {% else %}
-                            <p class="text-center text-muted mt-3">Enter search parameters and click "Search Listings" to begin.</p>
+                            <div class="text-center py-5">
+                                <i class="fas fa-home fa-3x text-primary mb-3"></i>
+                                <h5>Welcome to Rental Scanner</h5>
+                                <p class="text-muted">Enter your search criteria to find rental listings from multiple sources</p>
+                                <div class="mt-4">
+                                    <h6 class="text-muted mb-3">We search:</h6>
+                                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                        <span class="badge bg-success p-2">Kijiji</span>
+                                        <span class="badge bg-info p-2">Realtor.ca</span>
+                                        <span class="badge bg-warning p-2">Rentals.ca</span>
+                                    </div>
+                                </div>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -98,16 +480,63 @@
         </div>
     </div>
 
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">RentalHunter &copy; {{ current_year }}</span>
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="text-muted mb-0">
+                        &copy; {{ current_year }} Rental Scanner. Multi-source rental search powered by intelligent aggregation.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-code me-1"></i> Version 2.1
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> <!-- FontAwesome for icons -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show loading overlay on form submit
+        document.getElementById('searchForm').addEventListener('submit', function() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+
+        // Sort listings by price
+        function sortListings(by) {
+            const container = document.querySelector('.card-body');
+            const listings = Array.from(document.querySelectorAll('.listing-card'));
+
+            if (by === 'price') {
+                listings.sort((a, b) => {
+                    return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                });
+            }
+
+            listings.forEach(listing => container.appendChild(listing));
+        }
+
+        // Filter by source
+        function filterBySource(source) {
+            const listings = document.querySelectorAll('.listing-card');
+
+            listings.forEach(listing => {
+                if (source === 'all' || listing.dataset.source === source) {
+                    listing.style.display = 'block';
+                } else {
+                    listing.style.display = 'none';
+                }
+            });
+        }
+
+        // Hide loading on page load (in case of back button)
+        window.addEventListener('load', function() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        });
+    </script>
 </body>
 </html>

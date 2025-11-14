@@ -110,3 +110,28 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# rentFalcon specific
+*.db
+*.sqlite
+*.sqlite3
+debug_output/
+.wdm/
+*.log
+rental_scanner.db
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

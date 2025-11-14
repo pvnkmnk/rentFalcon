@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Scanner - Newmarket Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            margin-top: 25px;
+        }
+
+        .step-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .step-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .big-button {
+            flex: 1;
+            min-width: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 25px 30px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .big-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .big-button.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .big-button.secondary:hover {
+            background: #f8f9fa;
+        }
+
+        .icon-text {
+            margin-right: 8px;
+        }
+
+        .info-box {
+            background: #e0e7ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .feature-card .emoji {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .feature-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer p {
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .cities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .city-tag {
+            background: #e0e7ff;
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🏠</div>
+            <h1>Rental Scanner</h1>
+            <p>Find Your Perfect Rental in Newmarket, Ontario</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Version 2.1 - Newmarket Edition</p>
+        </div>
+
+        <div class="content">
+            <div style="text-align: center;">
+                <span class="status-badge">✅ Ready to Use</span>
+            </div>
+
+            <!-- Quick Start Section -->
+            <div class="section">
+                <h2></h2><span class="icon-text">🚀</span> Quick Start</h2>
+
+                <div class="warning-box">
+                    <strong></strong>⚠️ First Time User?</strong><br>
+                    Run <code>EASY_SETUP.bat</code> first! It will install everything you need automatically.
+                </div>
+
+                <div class="button-container">
+                    <a href="START_RENTAL_SCANNER.bat" class="big-button">
+                        <span class="icon-text">▶️</span> Start Rental Scanner
+                    </a>
+                    <a href="EASY_SETUP.bat" class="big-button secondary">
+                        <span class="icon-text">⚙️</span> First Time Setup
+                    </a>
+                </div>
+
+                <div class="info-box">
+                    <strong></strong>ℹ️ What happens when you click "Start":</strong>
+                    <ol style="margin-top: 10px;">
+                        <li>A black window opens (don't close it!)</li>
+                        <li>Your web browser opens automatically</li>
+                        <li>You see the search page - ready to use!</li>
+                        <li>First search takes 30-60 seconds (ChromeDriver download - one time only)</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- What You Get Section -->
+            <div class="section">
+                <h2><span class="icon-text">✨</span> What You Get</h2>
+
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="emoji">🔍</div>
+                        <h4>Multi-Source Search</h4>
+                        <p>Searches Kijiji and Rentals.ca simultaneously</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="emoji">⚡</div>
+                        <h4>Fast Results</h4>
+                        <p>Get 30-50 listings in just 10-15 seconds</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="emoji">🎯</div>
+                        <h4>No Duplicates</h4>
+                        <p>Automatically removes duplicate listings</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="emoji">🆓</div>
+                        <h4>Completely Free</h4>
+                        <p>No ads, no subscriptions, no hidden costs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supported Cities -->
+            <div class="section">
+                <h2><span class="icon-text">🏘️</span> Supported Cities</h2>
+                <p>Search rentals in any of these cities within 25 km of Newmarket:</p>
+
+                <div class="cities">
+                    <span class="city-tag">📍 Newmarket</span>
+                    <span class="city-tag">📍 Aurora</span>
+                    <span class="city-tag">📍 Richmond Hill</span>
+                    <span class="city-tag">📍 Bradford</span>
+                    <span class="city-tag">📍 East Gwillimbury</span>
+                    <span class="city-tag">📍 Markham</span>
+                    <span class="city-tag">📍 Vaughan</span>
+                    <span class="city-tag">📍 King City</span>
+                </div>
+            </div>
+
+            <!-- First Time Setup Instructions -->
+            <div class="section">
+                <h2><span class="icon-text">📋</span> First Time Setup (5 Minutes)</h2>
+
+                <div class="step-box">
+                    <h4>Step 1: Install Python (If Not Installed)</h4>
+                    <ul>
+                        <li>Download from: <a href="https://www.python.org/downloads/" target="_blank">python.org/downloads</a></li>
+                        <li><strong>⚠️ IMPORTANT:</strong> Check "Add Python to PATH" during installation</li>
+                        <li>Restart your computer after installation</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h4>Step 2: Install Google Chrome (If Not Installed)</h4>
+                    <ul>
+                        <li>Download from: <a href="https://www.google.com/chrome/" target="_blank">google.com/chrome</a></li>
+                        <li>Install normally</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h4>Step 3: Run Easy Setup</h4>
+                    <ul>
+                        <li>Double-click <code>EASY_SETUP.bat</code></li>
+                        <li>Follow the on-screen instructions</li>
+                        <li>Wait 3-5 minutes for installation</li>
+                        <li>Desktop shortcut will be created automatically</li>
+                    </ul>
+                </div>
+
+                <div class="success-box">
+                    <strong>✅ After setup completes:</strong><br>
+                    You'll have a desktop icon called "Rental Scanner - Newmarket" that you can double-click anytime!
+                </div>
+            </div>
+
+            <!-- How to Use -->
+            <div class="section">
+                <h2><span class="icon-text">💡</span> How to Use</h2>
+
+                <div class="step-box">
+                    <h4>1. Start the App</h4>
+                    <p>Double-click the desktop shortcut or click "Start Rental Scanner" above</p>
+                </div>
+
+                <div class="step-box">
+                    <h4>2. Search for Rentals</h4>
+                    <ul>
+                        <li><strong>Location:</strong> Already set to "Newmarket" (you can change it!)</li>
+                        <li><strong>Min Price:</strong> Optional - enter minimum rent (e.g., 1500)</li>
+                        <li><strong>Max Price:</strong> Optional - enter maximum rent (e.g., 2500)</li>
+                        <li></li>Click <strong>"Search Rentals"</strong></li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h4>3. View Results</h4>
+                    <p>Wait 10-15 seconds and see 30-50 rental listings with all details!</p>
+                </div>
+
+                <div class="step-box">
+                    <h4>4. Stop the App</h4>
+                    <ul>
+                        <li>Close the web browser</li>
+                        <li>Press <strong>Ctrl + C</strong> in the black window</li>
+                        <li>Close the black window</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="section">
+                <h2><span class="icon-text">🔧</span> Troubleshooting</h2>
+
+                <h3>Problem: "Python is not installed"</h3>
+                <ul>
+                    <li>Install Python from <a href="https://www.python.org/downloads/" target="_blank">python.org</a></li>
+                    <li>During installation, CHECK the box: "Add Python to PATH"</li>
+                    <li>Restart your computer</li>
+                    <li>Run <code>EASY_SETUP.bat</code> again</li>
+                </ul>
+
+                <h3>Problem: "Chrome not found"</h3>
+                <ul>
+                    <li>Install Chrome from <a href="https://www.google.com/chrome/" target="_blank">google.com/chrome</a></li>
+                    <li>Run <code>EASY_SETUP.bat</code> again</li>
+                </ul>
+
+                <h3>Problem: No results found</h3>
+                <ul>
+                    <li>Check spelling of city name</li>
+                    <li>Remove price filters (leave blank)</li>
+                    <li>Try a different city (Aurora, Richmond Hill, etc.)</li>
+                    <li>Check internet connection</li>
+                </ul>
+
+                <h3>Problem: First search is very slow</h3>
+                <ul>
+                    <li><strong>This is normal!</strong> ChromeDriver is downloading (30-60 seconds)</li>
+                    <li>Only happens once</li>
+                    <li>All subsequent searches are fast (10-15 seconds)</li>
+                </ul>
+            </div>
+
+            <!-- Documentation -->
+            <div class="section">
+                <h2><span class="icon-text">📚</span> Documentation Files</h2>
+
+                <ul>
+                    <li><strong>USER_GUIDE_SIMPLE.md</strong> - Complete guide for non-technical users</li>
+                    <li><strong>QUICK_REFERENCE.md</strong> - Quick tips and commands</li>
+                    <li><strong>README_FOR_USERS.md</strong> - Overview and FAQ</li>
+                    <li><strong>NEWMARKET_QUICK_START.md</strong> - Examples and search tips</li>
+                    <li><strong>INSTALLATION.md</strong> - Technical installation guide</li>
+                </ul>
+            </div>
+
+            <!-- System Requirements -->
+            <div class="section">
+                <h2><span class="icon-text">💻</span> System Requirements</h2>
+
+                <div class="info-box">
+                    <strong>Required:</strong>
+                    <ul>
+                        <li>✅ Windows 10 or 11</li>
+                        <li>✅ Internet connection</li>
+                        <li>✅ Python 3.8 or newer (auto-installed by EASY_SETUP)</li>
+                        <li>✅ Google Chrome browser</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Rental Scanner - Newmarket Edition</strong></p>
+            <p>Version 2.1 | November 2025</p>
+            <p style="margin-top: 15px;">🏠 Find your perfect rental in the Newmarket area! 🏠</p>
+        </div>
+    </div>
+</body>
+</html>

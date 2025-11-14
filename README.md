@@ -1,6 +1,7 @@
 # 🦅 rentFalcon
 
-**Fast, Multi-Source Rental Search for Newmarket, Ontario**
+## *get the swoop on landlords*
+**Fast, Multi-Source Rental Search for York Region, Ontario**
 
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
@@ -313,15 +314,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Original Creator** - [Your Name](https://github.com/yourusername)
+- **Original Creator** - [jd gramsci](https://github.com/pvnkmnk)
 
 ---
 
 ## 🙏 Acknowledgments
 
-- Thanks to all the rental websites for providing public data
+- Thanks to all the rental websites for providing public data, thank you to Inn from the Cold for the inspiration
 - Built with Flask, BeautifulSoup, and Selenium
-- Inspired by the need for easier rental searching
+- Inspired by the need for streamlined housing access, and the desire to build dual power where ever I can.
 
 ---
 
@@ -359,7 +360,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If rentFalcon helps you find a rental, please give it a star! ⭐
 
-It helps others discover the tool and motivates continued development.
+Share with your friends and take care of your community! Housing First!
 
 ---
 
@@ -375,9 +376,9 @@ It helps others discover the tool and motivates continued development.
 
 ---
 
-**Made with ❤️ for Newmarket area renters**
+**Made with ❤️ for the working class**
 
-🦅 **rentFalcon** - *Find your perfect rental, faster.*
+🦅 **rentFalcon** - *get the swoop on landlords*
 
 ---
 

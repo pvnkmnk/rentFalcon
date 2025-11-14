@@ -24,6 +24,7 @@ redis==5.0.1
 SQLAlchemy==2.0.23
 psycopg2-binary==2.9.9
 alembic==1.13.0
+pymongo==4.15.4
 
 # Environment and Configuration
 python-dotenv==1.0.0

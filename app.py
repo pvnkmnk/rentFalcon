@@ -7,6 +7,7 @@ import logging
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
+from models.mongo_db import bulk_upsert_listings, get_all_active_listings, find_listings_near
 
 from scrapers.scraper_manager import ScraperManager
 
@@ -19,6 +20,9 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"
+
+# NOTE: MongoDB connection is initialized in models.mongo_db
+# For a real app, you would ensure the connection is robustly handled here.
 
 # Initialize Scraper Manager with configuration
 # This runs once at startup
@@ -84,23 +88,36 @@ def index():
             result = manager.search_all(location, min_price, max_price)
 
             # Extract data
-            listings = result["listings"]
+            scraped_listings = result["listings"]
             stats = result["stats"]
             errors = result["errors"]
 
             logger.info(
-                f"Search complete: {len(listings)} unique listings from "
+                f"Search complete: {len(scraped_listings)} unique listings from "
                 f"{stats['scrapers_succeeded']} sources in {stats['execution_time']:.2f}s"
             )
+
+            # --- MongoDB Integration: Save scraped data ---
+            if scraped_listings:
+                upsert_count = bulk_upsert_listings(scraped_listings)
+                logger.info(f"MongoDB upsert complete: {upsert_count} listings updated/inserted.")
+            # --- End MongoDB Integration ---
 
             # Log any errors
             if errors:
                 for scraper, error in errors.items():
                     logger.warning(f"Scraper {scraper} failed: {error}")
 
+            # For now, we will still return the scraped listings directly,
+            # but in a real implementation, we would query the DB for the final,
+            # enriched, and deduplicated set.
+            # Since the current manager.search_all already handles deduplication,
+            # we will stick to returning the scraped list for minimal app.py change.
+            listings_to_display = scraped_listings
+
             return render_template(
                 "index.html",
-                results=listings,
+                results=listings_to_display,
                 stats=stats,
                 errors=errors,
                 search_params=request.form,
@@ -134,9 +151,13 @@ def index():
             )
 
     # GET request - show empty form
+    # On initial load, display all active listings from the database
+    initial_listings = get_all_active_listings(limit=50)
+    logger.info(f"Initial load: {len(initial_listings)} active listings from MongoDB.")
+
     return render_template(
         "index.html",
-        results=None,
+        results=initial_listings,
         search_params=request.args,
         current_year=current_year,
         available_scrapers=manager.get_available_scrapers(),
@@ -160,6 +181,13 @@ def api_search():
         # Execute search
         result = manager.search_all(location, min_price, max_price)
 
+        # --- MongoDB Integration: Save scraped data ---
+        scraped_listings = result["listings"]
+        if scraped_listings:
+            bulk_upsert_listings(scraped_listings)
+        # --- End MongoDB Integration ---
+
+        # In a real API, we would query the DB, but for now, return the scraped result
         return jsonify(result), 200
 
     except Exception as e:

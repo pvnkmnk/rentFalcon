@@ -345,14 +345,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Version 2.2 (Planned)
 - [ ] Add Facebook Marketplace scraper
 - [ ] Saved searches feature
-- [ ] Email notifications
+- [ ] Email/Discord/Telegram notifications
 - [ ] Mac/Linux support
 
 ### Version 3.0 (Future)
 - [ ] Map view of listings
 - [ ] Mobile app
+- [ ] Web App
+- [ ] Docker Image
 - [ ] User accounts (optional)
-- [ ] Expand to other Ontario cities
+- [ ] Expand to all Canadian provinces/territories
 
 ---
 
@@ -371,7 +373,7 @@ Share with your friends and take care of your community! Housing First!
 - **Scrapers:** 2 active (3 total)
 - **Cities Supported:** 8
 - **Documentation Pages:** 10+
-- **Development Time:** 3 days
+- **Development Time:** 5 days
 - **Status:** ✅ Production Ready
 
 ---

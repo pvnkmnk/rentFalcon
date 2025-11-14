@@ -42,7 +42,7 @@ All listings from multiple sources in one place, with duplicate removal.
 
 ### For Non-Technical Users (Windows)
 
-1. **Download** the project
+1. **Download** the project (.zip file)
 2. **Double-click** `EASY_SETUP.bat`
 3. **Follow** on-screen instructions (5 minutes)
 4. **Start searching!** Use desktop shortcut or `START_RENTAL_SCANNER.bat`

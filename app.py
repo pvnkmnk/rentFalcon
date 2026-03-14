@@ -7,7 +7,9 @@ import logging
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
+from flask_wtf.csrf import CSRFProtect
 
+from config import get_config
 from scrapers.scraper_manager import ScraperManager
 
 # Configure logging
@@ -18,7 +20,10 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"
+app.config.from_object(get_config())
+
+# Enable CSRF protection
+csrf = CSRFProtect(app)
 
 # Initialize Scraper Manager with configuration
 # This runs once at startup
@@ -115,7 +120,7 @@ def index():
                 "index.html",
                 results=None,
                 search_params=request.form,
-                error=f"Invalid price values: {str(e)}",
+                error="Invalid price values provided. Please enter numeric values.",
                 current_year=current_year,
                 available_scrapers=manager.get_available_scrapers(),
                 enabled_scrapers=manager.get_enabled_scrapers(),
@@ -127,7 +132,7 @@ def index():
                 "index.html",
                 results=None,
                 search_params=request.form,
-                error=f"An error occurred: {str(e)}",
+                error="An internal error occurred while processing your search. Please try again later.",
                 current_year=current_year,
                 available_scrapers=manager.get_available_scrapers(),
                 enabled_scrapers=manager.get_enabled_scrapers(),
@@ -164,7 +169,7 @@ def api_search():
 
     except Exception as e:
         logger.error(f"API search error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal server error occurred"}), 500
 
 
 @app.route("/api/sources", methods=["GET"])
@@ -232,6 +237,6 @@ if __name__ == "__main__":
     logger.info("Starting rentFalcon application...")
     logger.info(f"Enabled scrapers: {', '.join(manager.get_enabled_scrapers())}")
 
-    # Run with debug mode
+    # Run server
     # For production, use: gunicorn -w 4 -b 0.0.0.0:5000 app:app
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)

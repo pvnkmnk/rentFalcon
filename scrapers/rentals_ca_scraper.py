@@ -395,7 +395,13 @@ class RentalsCAScraper(BaseScraper):
         from bs4 import BeautifulSoup
 
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
+        # Use lxml if available for speed, fallback to html.parser
+        parser = "lxml"
+        try:
+            import lxml  # noqa: F401
+        except ImportError:
+            parser = "html.parser"
+        soup = BeautifulSoup(html, parser)
 
         # Find listing cards (adjust selectors based on actual site structure)
         listing_cards = soup.find_all("div", class_=re.compile("listing-card"))

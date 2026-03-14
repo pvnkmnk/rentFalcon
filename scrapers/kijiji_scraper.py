@@ -68,7 +68,13 @@ class KijijiScraper(BaseScraper):
             List of raw listing dictionaries
         """
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
+        # Use lxml if available for speed, fallback to html.parser
+        parser = "lxml"
+        try:
+            import lxml  # noqa: F401
+        except ImportError:
+            parser = "html.parser"
+        soup = BeautifulSoup(html, parser)
 
         # Kijiji uses JSON-LD structured data
         json_ld_script = soup.find("script", type="application/ld+json")

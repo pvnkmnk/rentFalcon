@@ -379,17 +379,23 @@ class ScraperManager:
         title2 = (listing2.get("title") or "").lower()
 
         if title1 and title2:
-            title_similarity = self._text_similarity(title1, title2)
+            title_similarity = self._text_similarity(
+                title1, title2, threshold=0.7  # Use the lower threshold for multi-field check
+            )
 
             if title_similarity >= self.similarity_threshold:
                 return True
+        else:
+            title_similarity = 0
 
         # Check location similarity
         location1 = (listing1.get("location") or "").lower()
         location2 = (listing2.get("location") or "").lower()
 
         if location1 and location2:
-            location_similarity = self._text_similarity(location1, location2)
+            location_similarity = self._text_similarity(
+                location1, location2, threshold=self.similarity_threshold
+            )
 
             # If title and location are both very similar, it's a duplicate
             if (
@@ -400,17 +406,34 @@ class ScraperManager:
 
         return False
 
-    def _text_similarity(self, text1: str, text2: str) -> float:
+    def _text_similarity(self, text1: str, text2: str, threshold: float = 0.0) -> float:
         """
         Calculate similarity between two text strings.
+        Includes a fast short-circuit if the maximum possible similarity
+        is below the threshold.
 
         Args:
             text1: First text
             text2: Second text
+            threshold: Minimum similarity threshold to bypass computation
 
         Returns:
             Similarity score between 0 and 1
         """
+        if not text1 and not text2:
+            return 1.0
+        if not text1 or not text2:
+            return 0.0
+
+        # Fast length-based short-circuit:
+        # SequenceMatcher.ratio() is 2.0 * M / T where M is matches and T is total length.
+        # Max possible ratio is (2.0 * min_len) / (len1 + len2).
+        l1, l2 = len(text1), len(text2)
+        if threshold > 0:
+            max_possible = (2.0 * min(l1, l2)) / (l1 + l2)
+            if max_possible < threshold:
+                return 0.0
+
         return SequenceMatcher(None, text1, text2).ratio()
 
     def get_available_scrapers(self) -> List[str]:

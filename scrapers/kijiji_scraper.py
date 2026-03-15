@@ -68,17 +68,23 @@ class KijijiScraper(BaseScraper):
             List of raw listing dictionaries
         """
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
 
-        # Kijiji uses JSON-LD structured data
-        json_ld_script = soup.find("script", type="application/ld+json")
+        # Optimization: Use regex to extract JSON-LD for speed
+        # Kijiji's page is large, and we only need one script tag
+        import re
 
-        if not json_ld_script:
+        json_ld_match = re.search(
+            r"<script[^>]*type=\"application/ld\+json\"[^>]*>(.*?)</script>",
+            html,
+            re.DOTALL,
+        )
+
+        if not json_ld_match:
             self.logger.warning("JSON-LD script tag not found on Kijiji page")
             return listings
 
         try:
-            data = json.loads(json_ld_script.string)
+            data = json.loads(json_ld_match.group(1))
 
             # Verify it's an ItemList
             if data.get("@type") != "ItemList":

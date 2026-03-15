@@ -1,10 +1,12 @@
 import logging
+import re
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
+from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -264,6 +266,21 @@ class BaseScraper(ABC):
 
         return filtered
 
+    def get_soup(self, html: str) -> BeautifulSoup:
+        """
+        Get BeautifulSoup object with optimal parser.
+
+        Args:
+            html: HTML content to parse
+
+        Returns:
+            BeautifulSoup object
+        """
+        try:
+            return BeautifulSoup(html, "lxml")
+        except Exception:
+            return BeautifulSoup(html, "html.parser")
+
     def _extract_price(self, price_value: Any) -> Optional[float]:
         """
         Extract numeric price from various formats.
@@ -282,8 +299,6 @@ class BaseScraper(ABC):
 
         if isinstance(price_value, str):
             # Remove currency symbols, commas, and extract number
-            import re
-
             price_str = price_value.replace("$", "").replace(",", "").strip()
             match = re.search(r"\d+\.?\d*", price_str)
             if match:

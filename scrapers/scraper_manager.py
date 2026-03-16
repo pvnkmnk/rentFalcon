@@ -411,6 +411,15 @@ class ScraperManager:
         Returns:
             Similarity score between 0 and 1
         """
+        # Optimized: Quick length-based short-circuit.
+        # If the maximum possible ratio is less than the threshold, exit early.
+        # SequenceMatcher.ratio() is O(N*M), this check is O(1).
+        len1, len2 = len(text1), len(text2)
+        if len1 + len2 > 0:
+            max_possible_ratio = (2.0 * min(len1, len2)) / (len1 + len2)
+            if max_possible_ratio < self.similarity_threshold:
+                return max_possible_ratio
+
         return SequenceMatcher(None, text1, text2).ratio()
 
     def get_available_scrapers(self) -> List[str]:

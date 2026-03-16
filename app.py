@@ -7,7 +7,9 @@ import logging
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
+from flask_wtf.csrf import CSRFProtect
 
+from config import get_config
 from scrapers.scraper_manager import ScraperManager
 
 # Configure logging
@@ -18,7 +20,10 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"
+app.config.from_object(get_config())
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 # Initialize Scraper Manager with configuration
 # This runs once at startup
@@ -32,9 +37,7 @@ scraper_config = {
     "similarity_threshold": 0.85,
     "timeout": 60,
     "scraper_configs": {
-        "rentals_ca": {
-            "use_selenium": True  # Enable Selenium for rentals_ca scraping
-        },
+        "rentals_ca": {"use_selenium": True},  # Enable Selenium for rentals_ca scraping
         "realtor_ca": {
             "use_selenium": True  # Enable Selenium for realtor_ca scraping (fallback)
         },
@@ -145,6 +148,7 @@ def index():
 
 
 @app.route("/api/search", methods=["POST"])
+@csrf.exempt
 def api_search():
     """API endpoint for programmatic access"""
     try:
@@ -170,12 +174,15 @@ def api_search():
 @app.route("/api/sources", methods=["GET"])
 def api_sources():
     """Get available and enabled scrapers"""
-    return jsonify(
-        {
-            "available": manager.get_available_scrapers(),
-            "enabled": manager.get_enabled_scrapers(),
-        }
-    ), 200
+    return (
+        jsonify(
+            {
+                "available": manager.get_available_scrapers(),
+                "enabled": manager.get_enabled_scrapers(),
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/health", methods=["GET"])
@@ -185,23 +192,29 @@ def health_check():
         available = manager.get_available_scrapers()
         enabled = manager.get_enabled_scrapers()
 
-        return jsonify(
-            {
-                "status": "healthy",
-                "scrapers_available": len(available),
-                "scrapers_enabled": len(enabled),
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-        ), 200
+        return (
+            jsonify(
+                {
+                    "status": "healthy",
+                    "scrapers_available": len(available),
+                    "scrapers_enabled": len(enabled),
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
-        return jsonify(
-            {
-                "status": "unhealthy",
-                "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-        ), 500
+        return (
+            jsonify(
+                {
+                    "status": "unhealthy",
+                    "error": str(e),
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            ),
+            500,
+        )
 
 
 @app.errorhandler(404)

@@ -1,0 +1,3 @@
+## 2025-11-20 - Standardizing Financial Inputs and Submission Feedback
+**Learning:** In a utility-focused application like a rental scanner, users benefit significantly from immediate visual cues for units (currency/frequency) and explicit feedback during long-running async operations. Input groups reduce cognitive load by placing units inside the input context, while button loading states prevent duplicate submissions and confirm the app is working.
+**Action:** Standardize all financial inputs using Bootstrap input groups (prefix '$', suffix '/mo'). Ensure all primary action buttons transition to a disabled loading state with a spinner upon submission to improve perceived performance and reliability.

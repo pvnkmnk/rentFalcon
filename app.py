@@ -7,7 +7,9 @@ import logging
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
+from flask_wtf.csrf import CSRFProtect
 
+from config import get_config
 from scrapers.scraper_manager import ScraperManager
 
 # Configure logging
@@ -18,19 +20,20 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"
+app.config.from_object(get_config())
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 # Initialize Scraper Manager with configuration
 # This runs once at startup
+config = app.config
 scraper_config = {
-    "enabled_scrapers": [
-        "kijiji",
-        "rentals_ca",
-    ],  # Working scrapers only (Realtor.ca disabled - returns 0 results)
+    "enabled_scrapers": config.get("ENABLED_SCRAPERS", ["kijiji", "rentals_ca"]),
     "max_workers": 3,
     "deduplicate": True,
     "similarity_threshold": 0.85,
-    "timeout": 60,
+    "timeout": config.get("SCRAPER_TIMEOUT", 60),
     "scraper_configs": {
         "rentals_ca": {
             "use_selenium": True  # Enable Selenium for rentals_ca scraping
@@ -145,6 +148,7 @@ def index():
 
 
 @app.route("/api/search", methods=["POST"])
+@csrf.exempt
 def api_search():
     """API endpoint for programmatic access"""
     try:
@@ -215,6 +219,28 @@ def internal_error(e):
     """500 error handler"""
     logger.error(f"Internal error: {e}", exc_info=True)
     return render_template("500.html"), 500
+
+
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to every response"""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+
+    # Strict Content Security Policy
+    # Allows Bootstrap, FontAwesome, and Google Fonts from their CDNs
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        "img-src 'self' data: *; "  # Allow images from any source since they are rental listings
+        "frame-ancestors 'none'; "
+    )
+    response.headers["Content-Security-Policy"] = csp
+
+    return response
 
 
 @app.context_processor

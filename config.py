@@ -33,7 +33,7 @@ class Config:
 
     # Enabled Scrapers (can be controlled via environment)
     ENABLED_SCRAPERS = os.environ.get(
-        "ENABLED_SCRAPERS", "kijiji,realtor,rentals,viewit,apartments"
+        "ENABLED_SCRAPERS", "kijiji,realtor_ca,rentals_ca"
     ).split(",")
 
     # Rate Limiting

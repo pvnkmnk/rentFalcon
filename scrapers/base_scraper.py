@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
+from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -328,6 +329,25 @@ class BaseScraper(ABC):
                     continue
 
         return None
+
+    def get_soup(self, html: str) -> BeautifulSoup:
+        """
+        Create a BeautifulSoup object from HTML string.
+        Uses lxml parser for performance, falls back to html.parser if unavailable.
+
+        Args:
+            html: HTML content string
+
+        Returns:
+            BeautifulSoup object
+        """
+        try:
+            return BeautifulSoup(html, "lxml")
+        except (ImportError, Exception):
+            # We also catch Exception as BeautifulSoup can raise FeatureNotFound
+            # which might not be an ImportError depending on the environment.
+            self.logger.warning("lxml parser not available, falling back to html.parser")
+            return BeautifulSoup(html, "html.parser")
 
     def _save_debug_html(self, html: str):
         """

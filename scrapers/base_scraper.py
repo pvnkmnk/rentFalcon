@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
+from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -125,6 +126,23 @@ class BaseScraper(ABC):
             List of dictionaries containing raw listing data
         """
         pass
+
+    def get_soup(self, html: str) -> BeautifulSoup:
+        """
+        Create a BeautifulSoup object from HTML.
+        Prefer 'lxml' parser for performance, fallback to 'html.parser'.
+
+        Args:
+            html: HTML content
+
+        Returns:
+            BeautifulSoup object
+        """
+        try:
+            return BeautifulSoup(html, "lxml")
+        except Exception:
+            self.logger.debug("lxml parser not available, falling back to html.parser")
+            return BeautifulSoup(html, "html.parser")
 
     def search(
         self,

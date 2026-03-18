@@ -123,9 +123,12 @@ class ProductionConfig(Config):
     CACHE_TYPE = "redis" if Config.CACHE_REDIS_URL else "simple"
 
     # Production should have real secret key
-    SECRET_KEY = os.environ.get("SECRET_KEY")
-    if not SECRET_KEY:
-        raise ValueError("SECRET_KEY environment variable must be set in production")
+    @property
+    def SECRET_KEY(self):
+        key = os.environ.get("SECRET_KEY")
+        if not key:
+            raise ValueError("SECRET_KEY environment variable must be set in production")
+        return key
 
     # Production logging
     LOG_LEVEL = "WARNING"
@@ -187,4 +190,5 @@ config = {
 def get_config():
     """Get configuration based on environment variable"""
     env = os.environ.get("FLASK_ENV", "development")
-    return config.get(env, config["default"])
+    config_class = config.get(env, config["default"])
+    return config_class()

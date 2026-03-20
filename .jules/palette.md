@@ -1,0 +1,3 @@
+## 2025-05-15 - Improving Accessibility and Fixing HTML in `templates/index.html`
+**Learning:** Icon-heavy and generic buttons (e.g., "Sort", "Filter", "View Listing") in rental scanners present significant accessibility gaps for screen reader users when they lack unique contextual labels. Malformed HTML in loading overlays can also disrupt the visual and screen-reader experience.
+**Action:** Use `aria-label` to provide context for icon-only buttons and include dynamic property information (like listing titles) in `aria-label` for repetitive links to ensure each target is uniquely identifiable. Mark decorative icons with `aria-hidden="true"` and use ARIA live regions for dynamic UI states like search loaders.

@@ -378,8 +378,13 @@ class ScraperManager:
         title1 = (listing1.get("title") or "").lower()
         title2 = (listing2.get("title") or "").lower()
 
+        title_similarity = 0.0
         if title1 and title2:
-            title_similarity = self._text_similarity(title1, title2)
+            # Use 0.7 as the minimum threshold we care about for titles
+            # (it's used in the combined title+location check below)
+            title_similarity = self._text_similarity(
+                title1, title2, threshold=min(self.similarity_threshold, 0.7)
+            )
 
             if title_similarity >= self.similarity_threshold:
                 return True
@@ -389,7 +394,9 @@ class ScraperManager:
         location2 = (listing2.get("location") or "").lower()
 
         if location1 and location2:
-            location_similarity = self._text_similarity(location1, location2)
+            location_similarity = self._text_similarity(
+                location1, location2, threshold=self.similarity_threshold
+            )
 
             # If title and location are both very similar, it's a duplicate
             if (
@@ -400,18 +407,32 @@ class ScraperManager:
 
         return False
 
-    def _text_similarity(self, text1: str, text2: str) -> float:
+    def _text_similarity(
+        self, text1: str, text2: str, threshold: Optional[float] = None
+    ) -> float:
         """
-        Calculate similarity between two text strings.
+        Calculate similarity between two text strings with early exit optimization.
 
         Args:
             text1: First text
             text2: Second text
+            threshold: Optional threshold for early exit if similarity upper bound
+                       is below this value.
 
         Returns:
             Similarity score between 0 and 1
         """
-        return SequenceMatcher(None, text1, text2).ratio()
+        s = SequenceMatcher(None, text1, text2)
+
+        # Optimization: use quick_ratio and real_quick_ratio to exit early
+        # if the upper bound of the ratio is below the threshold
+        if threshold is not None:
+            if s.real_quick_ratio() < threshold:
+                return s.real_quick_ratio()
+            if s.quick_ratio() < threshold:
+                return s.quick_ratio()
+
+        return s.ratio()
 
     def get_available_scrapers(self) -> List[str]:
         """

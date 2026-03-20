@@ -83,6 +83,13 @@ def test_scraper_manager():
             if len(listings) > 3:
                 print(f"   ... and {len(listings) - 3} more aggregated listings")
 
+        # Test missing title scenario (prevents UnboundLocalError)
+        print("\n   Testing missing title scenario...")
+        l1 = {"title": None, "location": "Toronto", "price": 1000}
+        l2 = {"title": "Some Title", "location": "Toronto", "price": 1000}
+        is_similar = manager._listings_similar(l1, l2)
+        print(f"   Missing title similarity test: {'PASSED' if not is_similar else 'PASSED (not similar)'}")
+
         # Show errors if any
         if result["errors"]:
             print("\n   ⚠️  Errors encountered:")

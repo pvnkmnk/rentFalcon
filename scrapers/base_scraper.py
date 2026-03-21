@@ -2,7 +2,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -14,6 +14,9 @@ class BaseScraper(ABC):
     Abstract base class for all rental listing scrapers.
     All site-specific scrapers should inherit from this class.
     """
+
+    # Class-level cache for the preferred BeautifulSoup parser
+    _PREFERRED_PARSER: Optional[str] = None
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
@@ -328,6 +331,31 @@ class BaseScraper(ABC):
                     continue
 
         return None
+
+    def get_soup(self, html: str) -> "BeautifulSoup":
+        """
+        Standardized method for parsing HTML with BeautifulSoup.
+        Prioritizes the faster 'lxml' parser with a fallback to 'html.parser'.
+
+        Args:
+            html: HTML content to parse
+
+        Returns:
+            BeautifulSoup object
+        """
+        from bs4 import BeautifulSoup
+
+        # Determine preferred parser once and cache it
+        if BaseScraper._PREFERRED_PARSER is None:
+            try:
+                import lxml  # noqa: F401
+
+                BaseScraper._PREFERRED_PARSER = "lxml"
+            except ImportError:
+                self.logger.info("lxml not found, using html.parser as default")
+                BaseScraper._PREFERRED_PARSER = "html.parser"
+
+        return BeautifulSoup(html, BaseScraper._PREFERRED_PARSER)
 
     def _save_debug_html(self, html: str):
         """

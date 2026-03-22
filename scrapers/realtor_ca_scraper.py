@@ -165,7 +165,7 @@ class RealtorCAScraper(BaseScraper):
             List of raw listing dictionaries
         """
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
+        soup = self.get_soup(html)
 
         # Try to find embedded JSON data (Realtor.ca embeds data in script tags)
         # Look for window.__INITIAL_STATE__ or similar
@@ -307,9 +307,11 @@ class RealtorCAScraper(BaseScraper):
                 "url": url,
                 "bedrooms": bedrooms,
                 "bathrooms": bathrooms,
-                "image": f"https:{photo}"
-                if photo and not photo.startswith("http")
-                else photo,
+                "image": (
+                    f"https:{photo}"
+                    if photo and not photo.startswith("http")
+                    else photo
+                ),
                 "description": property_type,
             }
 

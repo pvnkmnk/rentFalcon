@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (searchForm && searchButton) {
         searchForm.addEventListener('submit', function(event) {
+            // Show loading overlay
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+            }
+
             // Basic validation (though HTML 'required' handles empty location)
             const locationInput = document.getElementById('location');
             if (locationInput && locationInput.value.trim() === '') {
@@ -17,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Show spinner and disable button
             if(searchButtonText && searchButtonSpinner) {
-                searchButtonText.textContent = 'Searching...';
+                searchButtonText.innerHTML = '<i class="fas fa-search me-2" aria-hidden="true"></i>Searching...';
                 searchButtonSpinner.classList.remove('d-none'); // Show spinner
             }
             searchButton.disabled = true;
@@ -35,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('pageshow', function(event) {
         if (searchButton && searchButton.disabled) {
             if(searchButtonText && searchButtonSpinner) {
-                searchButtonText.textContent = 'Search Listings';
+                searchButtonText.innerHTML = '<i class="fas fa-search me-2" aria-hidden="true"></i>Search All Sources';
                 searchButtonSpinner.classList.add('d-none'); // Hide spinner
             }
             searchButton.disabled = false;

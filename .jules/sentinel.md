@@ -1,0 +1,4 @@
+## 2026-03-22 - CSRF Protection and Config Hardening
+**Vulnerability:** The application lacked CSRF protection on its main search form and used a hardcoded `SECRET_KEY` in `app.py`, bypassing the secure configuration system.
+**Learning:** Even when security libraries like `Flask-WTF` are present in `requirements.txt`, they must be explicitly initialized in the application code. Hardcoded keys in the main entry point can override secure environment-based configurations.
+**Prevention:** Always initialize `CSRFProtect` globally and ensure `app.config.from_object()` is used to load configurations from a dedicated config module that prioritizes environment variables. Use `@property` in config classes for lazy evaluation of required environment variables to prevent startup crashes in dev/test environments.

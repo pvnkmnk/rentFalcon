@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchButton = document.getElementById('searchButton');
     const searchButtonText = document.getElementById('searchButtonText');
     const searchButtonSpinner = document.getElementById('searchButtonSpinner');
+    const searchIcon = document.getElementById('searchIcon');
 
     if (searchForm && searchButton) {
         searchForm.addEventListener('submit', function(event) {
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(searchButtonText && searchButtonSpinner) {
                 searchButtonText.textContent = 'Searching...';
                 searchButtonSpinner.classList.remove('d-none'); // Show spinner
+                if (searchIcon) searchIcon.classList.add('d-none'); // Hide search icon
             }
             searchButton.disabled = true;
             
@@ -35,8 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('pageshow', function(event) {
         if (searchButton && searchButton.disabled) {
             if(searchButtonText && searchButtonSpinner) {
-                searchButtonText.textContent = 'Search Listings';
+                searchButtonText.textContent = 'Search All Sources'; // Matches updated template text
                 searchButtonSpinner.classList.add('d-none'); // Hide spinner
+                if (searchIcon) searchIcon.classList.remove('d-none'); // Show search icon
             }
             searchButton.disabled = false;
         }

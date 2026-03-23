@@ -403,6 +403,8 @@ class ScraperManager:
     def _text_similarity(self, text1: str, text2: str) -> float:
         """
         Calculate similarity between two text strings.
+        Uses a length-based short-circuit to speed up comparisons of
+        significantly different strings.
 
         Args:
             text1: First text
@@ -411,6 +413,19 @@ class ScraperManager:
         Returns:
             Similarity score between 0 and 1
         """
+        if not text1 or not text2:
+            return 0.0
+
+        len1, len2 = len(text1), len(text2)
+
+        # SequenceMatcher.ratio() is 2.0 * matches / (len1 + len2)
+        # The maximum possible ratio is 2.0 * min(len1, len2) / (len1 + len2)
+        # We use 0.7 as the lower bound because it's the minimum threshold
+        # used in _listings_similar (even if self.similarity_threshold is higher)
+        max_possible_ratio = (2.0 * min(len1, len2)) / (len1 + len2)
+        if max_possible_ratio < 0.7:
+            return 0.0
+
         return SequenceMatcher(None, text1, text2).ratio()
 
     def get_available_scrapers(self) -> List[str]:

@@ -1,0 +1,4 @@
+## 2026-03-24 - Secure Lazy Configuration Loading
+**Vulnerability:** Application crash at import time when production-only environment variables (like `SECRET_KEY`) are missing, even in development environments.
+**Learning:** Hard-coded validation in configuration classes (e.g., `if not SECRET_KEY: raise ValueError`) triggers during module import. This forces development environments to define production secrets or causes failures during simple tasks like running tests or linting that import the app.
+**Prevention:** Use the `@property` decorator for sensitive configuration variables that require validation. This ensures validation only happens when the variable is actually accessed (lazy evaluation), allowing the application to be imported and configured with different classes (like `DevelopmentConfig`) without triggering production-only validations prematurely.

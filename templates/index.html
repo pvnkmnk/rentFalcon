@@ -175,12 +175,12 @@
 </head>
 <body>
     <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
         <div class="loading-content">
             <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <h5></h5>Searching multiple sources...</h5>
+            <h5>Searching multiple sources...</h5>
             <p class="text-muted mb-0">This may take 5-10 seconds</p>
         </div>
     </div>
@@ -189,23 +189,23 @@
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-home me-2"></i>
+                <i class="fas fa-home me-2" aria-hidden="true"></i>
                 <strong>Rental Scanner</strong>
                 <span class="badge bg-light text-primary ms-2">v2.1</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="#stats">
-                            <i class="fas fa-chart-bar me-1"></i> Statistics
+                            <i class="fas fa-chart-bar me-1" aria-hidden="true"></i> Statistics
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/health" target="_blank">
-                            <i class="fas fa-heartbeat me-1"></i> Status
+                            <i class="fas fa-heartbeat me-1" aria-hidden="true"></i> Status
                         </a>
                     </li>
                 </ul>
@@ -229,7 +229,7 @@
                         <form method="POST" action="/" id="searchForm">
                             <div class="mb-3">
                                 <label for="location" class="form-label">
-                                    <i class="fas fa-map-marker-alt me-1"></i> Location
+                                    <i class="fas fa-map-marker-alt me-1" aria-hidden="true"></i> Location
                                 </label>
                                 <input type="text"
                                        class="form-control"
@@ -243,7 +243,7 @@
 
                             <div class="mb-3">
                                 <label for="price_min" class="form-label">
-                                    <i class="fas fa-dollar-sign me-1"></i> Min Price ($/month)
+                                    <i class="fas fa-dollar-sign me-1" aria-hidden="true"></i> Min Price ($/month)
                                 </label>
                                 <input type="number"
                                        class="form-control"
@@ -256,7 +256,7 @@
 
                             <div class="mb-3">
                                 <label for="price_max" class="form-label">
-                                    <i class="fas fa-dollar-sign me-1"></i> Max Price ($/month)
+                                    <i class="fas fa-dollar-sign me-1" aria-hidden="true"></i> Max Price ($/month)
                                 </label>
                                 <input type="number"
                                        class="form-control"
@@ -267,16 +267,17 @@
                                        min="0">
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                <i class="fas fa-search me-2"></i>
-                                Search All Sources
+                            <button type="submit" class="btn btn-primary w-100 mb-3" id="searchButton">
+                                <i class="fas fa-search me-2" id="searchIcon" aria-hidden="true"></i>
+                                <span id="searchButtonSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                <span id="searchButtonText">Search All Sources</span>
                             </button>
                         </form>
 
                         <!-- Active Sources -->
                         <div class="mt-4 pt-3 border-top">
                             <h6 class="text-muted mb-3">
-                                <i class="fas fa-database me-1"></i> Active Sources
+                                <i class="fas fa-database me-1" aria-hidden="true"></i> Active Sources
                             </h6>
                             <div class="d-flex flex-wrap gap-2">
                                 {% if enabled_scrapers %}
@@ -301,7 +302,7 @@
                 <!-- Error Message -->
                 <div class="alert alert-danger error-alert" role="alert">
                     <h5 class="alert-heading">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Error
+                        <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>Error
                     </h5>
                     <p class="mb-0">{{ error }}</p>
                 </div>
@@ -354,7 +355,7 @@
                 {% if errors %}
                 <div class="alert alert-warning warning-alert mb-4" role="alert">
                     <h6 class="alert-heading">
-                        <i class="fas fa-exclamation-circle me-2"></i>Some Sources Failed
+                        <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>Some Sources Failed
                     </h6>
                     <ul class="mb-0">
                         {% for scraper, error_msg in errors.items() %}
@@ -379,11 +380,11 @@
                             </h5>
                             {% if results and results|length > 0 %}
                             <div class="btn-group btn-group-sm" role="group">
-                                <button type="button" class="btn btn-outline-primary" onclick="sortListings('price')">
-                                    <i class="fas fa-sort-amount-down me-1"></i>Price
+                                <button type="button" class="btn btn-outline-primary" onclick="sortListings('price')" aria-label="Sort listings by price">
+                                    <i class="fas fa-sort-amount-down me-1" aria-hidden="true"></i>Price
                                 </button>
-                                <button type="button" class="btn btn-outline-primary" onclick="filterBySource('all')">
-                                    <i class="fas fa-filter me-1"></i>All
+                                <button type="button" class="btn btn-outline-primary" onclick="filterBySource('all')" aria-label="Show all listings">
+                                    <i class="fas fa-filter me-1" aria-hidden="true"></i>All
                                 </button>
                             </div>
                             {% endif %}
@@ -414,25 +415,25 @@
                                 <div class="property-details">
                                     {% if listing.bedrooms %}
                                     <div class="property-detail">
-                                        <i class="fas fa-bed"></i>
+                                        <i class="fas fa-bed" aria-hidden="true"></i>
                                         <span>{{ listing.bedrooms }} Bed</span>
                                     </div>
                                     {% endif %}
                                     {% if listing.bathrooms %}
                                     <div class="property-detail">
-                                        <i class="fas fa-bath"></i>
+                                        <i class="fas fa-bath" aria-hidden="true"></i>
                                         <span>{{ listing.bathrooms }} Bath</span>
                                     </div>
                                     {% endif %}
                                     {% if listing.square_feet %}
                                     <div class="property-detail">
-                                        <i class="fas fa-ruler-combined"></i>
+                                        <i class="fas fa-ruler-combined" aria-hidden="true"></i>
                                         <span>{{ listing.square_feet }} sq ft</span>
                                     </div>
                                     {% endif %}
                                     {% if listing.location %}
                                     <div class="property-detail">
-                                        <i class="fas fa-map-marker-alt"></i>
+                                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
                                         <span>{{ listing.location }}</span>
                                     </div>
                                     {% endif %}
@@ -447,8 +448,8 @@
 
                                 <!-- View Button -->
                                 <div class="mt-3">
-                                    <a href="{{ listing.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-external-link-alt me-1"></i> View Listing
+                                    <a href="{{ listing.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary" aria-label="View listing: {{ listing.title }}">
+                                        <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i> View Listing
                                     </a>
                                 </div>
                             </div>
@@ -501,8 +502,18 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Show loading overlay on form submit
+        // Show loading overlay and update button state on form submit
         document.getElementById('searchForm').addEventListener('submit', function() {
+            const submitBtn = document.getElementById('searchButton');
+            const btnText = document.getElementById('searchButtonText');
+            const btnSpinner = document.getElementById('searchButtonSpinner');
+            const btnIcon = document.getElementById('searchIcon');
+
+            submitBtn.disabled = true;
+            btnIcon.classList.add('d-none');
+            btnSpinner.classList.remove('d-none');
+            btnText.textContent = 'Searching...';
+
             document.getElementById('loadingOverlay').style.display = 'flex';
         });
 

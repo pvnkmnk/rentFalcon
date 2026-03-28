@@ -377,9 +377,12 @@ class ScraperManager:
         # Check title similarity
         title1 = (listing1.get("title") or "").lower()
         title2 = (listing2.get("title") or "").lower()
+        title_similarity = 0.0
 
         if title1 and title2:
-            title_similarity = self._text_similarity(title1, title2)
+            title_similarity = self._text_similarity(
+                title1, title2, threshold=self.similarity_threshold
+            )
 
             if title_similarity >= self.similarity_threshold:
                 return True
@@ -400,17 +403,31 @@ class ScraperManager:
 
         return False
 
-    def _text_similarity(self, text1: str, text2: str) -> float:
+    def _text_similarity(self, text1: str, text2: str, threshold: float = 0.0) -> float:
         """
-        Calculate similarity between two text strings.
+        Calculate similarity between two text strings with optimization.
+        Uses length-based short-circuiting to avoid expensive computation.
 
         Args:
             text1: First text
             text2: Second text
+            threshold: Minimum similarity threshold to bypass detailed check
 
         Returns:
             Similarity score between 0 and 1
         """
+        if not text1 or not text2:
+            return 0.0
+
+        len1, len2 = len(text1), len(text2)
+
+        # Performance Optimization: Length-based short-circuit
+        # The theoretical maximum ratio is (2.0 * min(len1, len2)) / (len1 + len2)
+        if threshold > 0:
+            max_possible_ratio = (2.0 * min(len1, len2)) / (len1 + len2)
+            if max_possible_ratio < threshold:
+                return 0.0
+
         return SequenceMatcher(None, text1, text2).ratio()
 
     def get_available_scrapers(self) -> List[str]:

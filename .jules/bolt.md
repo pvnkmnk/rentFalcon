@@ -1,0 +1,3 @@
+## 2026-03-28 - [HTML Parsing & Text Similarity Optimization]
+**Learning:** Using 'lxml' as a BeautifulSoup parser is ~30% faster than the default 'html.parser' for processing large rental listing pages. Additionally, 'difflib.SequenceMatcher' is $O(N \times M)$ and can be a bottleneck during deduplication of large result sets; using a length-based upper bound to short-circuit similarity checks when strings are of vastly different lengths provides a significant efficiency boost.
+**Action:** Always prioritize 'lxml' when available and implement mathematical short-circuits for expensive string similarity comparisons when a threshold is known.

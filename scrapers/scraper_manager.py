@@ -379,17 +379,29 @@ class ScraperManager:
         title2 = (listing2.get("title") or "").lower()
 
         if title1 and title2:
-            title_similarity = self._text_similarity(title1, title2)
+            title_similarity = self._text_similarity(
+                title1, title2, threshold=self.similarity_threshold
+            )
 
             if title_similarity >= self.similarity_threshold:
                 return True
+        else:
+            title_similarity = 0.0
 
         # Check location similarity
         location1 = (listing1.get("location") or "").lower()
         location2 = (listing2.get("location") or "").lower()
 
         if location1 and location2:
-            location_similarity = self._text_similarity(location1, location2)
+            # If we need to check both title and location, the title check needs
+            # a lower threshold (0.7) than the primary similarity_threshold.
+            if title_similarity < 0.7:
+                # Re-calculate with lower threshold if it was skipped
+                title_similarity = self._text_similarity(title1, title2, threshold=0.7)
+
+            location_similarity = self._text_similarity(
+                location1, location2, threshold=self.similarity_threshold
+            )
 
             # If title and location are both very similar, it's a duplicate
             if (
@@ -400,17 +412,34 @@ class ScraperManager:
 
         return False
 
-    def _text_similarity(self, text1: str, text2: str) -> float:
+    def _text_similarity(
+        self, text1: str, text2: str, threshold: Optional[float] = None
+    ) -> float:
         """
-        Calculate similarity between two text strings.
+        Calculate similarity between two text strings with length-based optimization.
 
         Args:
             text1: First text
             text2: Second text
+            threshold: Minimum similarity threshold required
 
         Returns:
             Similarity score between 0 and 1
         """
+        if not text1 or not text2:
+            return 0.0
+
+        # Performance optimization: If lengths are too different, they can't be similar
+        # SequenceMatcher.ratio() is O(N*M) worst case, where N and M are lengths.
+        # Max possible ratio is 2 * min_len / (len1 + len2).
+        if threshold:
+            len1, len2 = len(text1), len(text2)
+            max_possible_ratio = 2.0 * min(len1, len2) / (len1 + len2)
+            if max_possible_ratio < threshold:
+                # Return an upper bound that is less than threshold
+                # but reflects the maximum possible similarity.
+                return max_possible_ratio
+
         return SequenceMatcher(None, text1, text2).ratio()
 
     def get_available_scrapers(self) -> List[str]:

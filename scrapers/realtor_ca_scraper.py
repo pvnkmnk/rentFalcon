@@ -165,7 +165,8 @@ class RealtorCAScraper(BaseScraper):
             List of raw listing dictionaries
         """
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
+        # Using centralized get_soup() for performance (uses lxml if available)
+        soup = self.get_soup(html)
 
         # Try to find embedded JSON data (Realtor.ca embeds data in script tags)
         # Look for window.__INITIAL_STATE__ or similar

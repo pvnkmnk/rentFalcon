@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
+from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -14,6 +15,9 @@ class BaseScraper(ABC):
     Abstract base class for all rental listing scrapers.
     All site-specific scrapers should inherit from this class.
     """
+
+    # Cache for the preferred parser to avoid repeated checks
+    _PREFERRED_PARSER = None
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
@@ -328,6 +332,27 @@ class BaseScraper(ABC):
                     continue
 
         return None
+
+    def get_soup(self, html: str) -> BeautifulSoup:
+        """
+        Create a BeautifulSoup object with the best available parser.
+        Prioritizes 'lxml' for performance, falls back to 'html.parser'.
+
+        Args:
+            html: HTML content to parse
+
+        Returns:
+            BeautifulSoup object
+        """
+        if BaseScraper._PREFERRED_PARSER is None:
+            try:
+                import lxml  # Check if lxml is available
+
+                BaseScraper._PREFERRED_PARSER = "lxml"
+            except ImportError:
+                BaseScraper._PREFERRED_PARSER = "html.parser"
+
+        return BeautifulSoup(html, BaseScraper._PREFERRED_PARSER)
 
     def _save_debug_html(self, html: str):
         """

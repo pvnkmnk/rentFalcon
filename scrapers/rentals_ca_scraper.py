@@ -392,10 +392,9 @@ class RentalsCAScraper(BaseScraper):
         Returns:
             List of raw listing dictionaries
         """
-        from bs4 import BeautifulSoup
-
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
+        # Using centralized get_soup() for performance (uses lxml if available)
+        soup = self.get_soup(html)
 
         # Find listing cards (adjust selectors based on actual site structure)
         listing_cards = soup.find_all("div", class_=re.compile("listing-card"))

@@ -6,7 +6,9 @@ Multi-source rental listing search powered by Scraper Manager
 import logging
 from datetime import datetime
 
+import os
 from flask import Flask, jsonify, render_template, request
+from flask_wtf.csrf import CSRFProtect
 
 from scrapers.scraper_manager import ScraperManager
 
@@ -18,7 +20,12 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"
+
+# Use environment variable for SECRET_KEY, with a fallback for local development only
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-fallback-only-for-local")
+
+# Enable CSRF protection
+csrf = CSRFProtect(app)
 
 # Initialize Scraper Manager with configuration
 # This runs once at startup
@@ -145,8 +152,9 @@ def index():
 
 
 @app.route("/api/search", methods=["POST"])
+@csrf.exempt
 def api_search():
-    """API endpoint for programmatic access"""
+    """API endpoint for programmatic access - Exempted from CSRF"""
     try:
         data = request.get_json()
 

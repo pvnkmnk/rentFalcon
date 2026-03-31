@@ -1,0 +1,4 @@
+## 2026-03-31 - Fix Missing CSRF Protection and Hardcoded Secret Key
+**Vulnerability:** The application was missing Cross-Site Request Forgery (CSRF) protection on its main search form and API endpoint. Additionally, the Flask `SECRET_KEY` had a hardcoded fallback in the code, which is insecure for production environments.
+**Learning:** In Flask applications using `flask_wtf`, global CSRF protection should be enabled using `CSRFProtect(app)`, and the `csrf_token` must be explicitly added to templates. Programmatic API endpoints might need to be exempted if they handle authentication separately.
+**Prevention:** Always initialize `CSRFProtect` and use environment variables for sensitive configuration like `SECRET_KEY`. Verify protection with automated tests that attempt POST requests without tokens.

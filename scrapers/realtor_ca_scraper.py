@@ -12,8 +12,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 
-from bs4 import BeautifulSoup
-
 from scrapers.base_scraper import BaseScraper
 
 
@@ -165,7 +163,7 @@ class RealtorCAScraper(BaseScraper):
             List of raw listing dictionaries
         """
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
+        soup = self.get_soup(html)
 
         # Try to find embedded JSON data (Realtor.ca embeds data in script tags)
         # Look for window.__INITIAL_STATE__ or similar
@@ -317,7 +315,7 @@ class RealtorCAScraper(BaseScraper):
             self.logger.debug(f"Error parsing listing: {e}")
             return None
 
-    def _parse_html_structure(self, soup: BeautifulSoup) -> List[Dict[str, Any]]:
+    def _parse_html_structure(self, soup: 'BeautifulSoup') -> List[Dict[str, Any]]:
         """
         Fallback HTML parsing if JSON extraction fails.
 

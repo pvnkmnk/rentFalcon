@@ -1,0 +1,4 @@
+## 2026-04-02 - Implement Global CSRF Protection and Centralized Configuration
+**Vulnerability:** The application was vulnerable to Cross-Site Request Forgery (CSRF) on the main search form, and had the Flask `SECRET_KEY` hardcoded in `app.py`.
+**Learning:** Enabling `CSRFProtect` globally in Flask is essential for security but requires manual exemption for programmatic API endpoints (like `/api/search`) using `@csrf.exempt`. Additionally, transitioning from hardcoded values to a centralized `config.py` structure (using `app.config.from_object()`) ensures that production environment variables are properly enforced.
+**Prevention:** Always initialize `CSRFProtect(app)` in the main entry point and use `{{ csrf_token() }}` in all POST forms. Ensure `SECRET_KEY` is never hardcoded and is always loaded from environment variables in production.

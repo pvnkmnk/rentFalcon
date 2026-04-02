@@ -7,7 +7,9 @@ import logging
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
+from flask_wtf.csrf import CSRFProtect
 
+from config import get_config
 from scrapers.scraper_manager import ScraperManager
 
 # Configure logging
@@ -18,7 +20,13 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"
+
+# Load configuration
+config = get_config()
+app.config.from_object(config)
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 # Initialize Scraper Manager with configuration
 # This runs once at startup
@@ -145,6 +153,7 @@ def index():
 
 
 @app.route("/api/search", methods=["POST"])
+@csrf.exempt
 def api_search():
     """API endpoint for programmatic access"""
     try:

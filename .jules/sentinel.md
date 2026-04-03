@@ -1,0 +1,4 @@
+## 2026-04-03 - Implementation of CSRF Protection and Centralized Configuration
+**Vulnerability:** The application had a hardcoded `SECRET_KEY` in `app.py` and lacked CSRF protection on its main search form, allowing potential Cross-Site Request Forgery attacks.
+**Learning:** Initializing `CSRFProtect(app)` globally in Flask-WTF is a robust defense, but requires explicit exemptions (using `@csrf.exempt`) for programmatic API endpoints like `/api/search` that do not use session-based authentication.
+**Prevention:** Always use `app.config.from_object(get_config())` to load settings from a dedicated `config.py` file, ensuring secrets are managed via environment variables rather than being hardcoded in source files. Verified that both legitimate and unauthorized (blocked) requests are handled correctly via a new security test suite.

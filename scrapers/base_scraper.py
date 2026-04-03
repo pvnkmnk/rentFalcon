@@ -15,6 +15,9 @@ class BaseScraper(ABC):
     All site-specific scrapers should inherit from this class.
     """
 
+    # Class-level cache for the preferred BeautifulSoup parser
+    _PREFERRED_PARSER = None
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize the scraper with configuration.
@@ -366,3 +369,26 @@ class BaseScraper(ABC):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit"""
         self.close()
+
+    def get_soup(self, html: str) -> "BeautifulSoup":
+        """
+        Create a BeautifulSoup object using the fastest available parser.
+        Caches the preferred parser at the class level.
+
+        Args:
+            html: HTML content to parse
+
+        Returns:
+            BeautifulSoup object
+        """
+        from bs4 import BeautifulSoup
+
+        if BaseScraper._PREFERRED_PARSER is None:
+            try:
+                import lxml  # noqa: F401
+
+                BaseScraper._PREFERRED_PARSER = "lxml"
+            except ImportError:
+                BaseScraper._PREFERRED_PARSER = "html.parser"
+
+        return BeautifulSoup(html, BaseScraper._PREFERRED_PARSER)

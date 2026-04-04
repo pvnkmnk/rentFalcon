@@ -7,8 +7,6 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from bs4 import BeautifulSoup
-
 from scrapers.base_scraper import BaseScraper
 
 
@@ -68,7 +66,7 @@ class KijijiScraper(BaseScraper):
             List of raw listing dictionaries
         """
         listings = []
-        soup = BeautifulSoup(html, "html.parser")
+        soup = self.get_soup(html)
 
         # Kijiji uses JSON-LD structured data
         json_ld_script = soup.find("script", type="application/ld+json")
@@ -221,9 +219,9 @@ def scrape_kijiji(price_min=None, price_max=None, location=None):
         old_format.append(
             {
                 "title": listing.get("title", "N/A"),
-                "price": f"${listing.get('price', 0):.2f}"
-                if listing.get("price")
-                else "N/A",
+                "price": (
+                    f"${listing.get('price', 0):.2f}" if listing.get("price") else "N/A"
+                ),
                 "location": listing.get("location", "N/A"),
                 "url": listing.get("url", "#"),
                 "description": listing.get("description", "N/A"),

@@ -15,6 +15,9 @@ class BaseScraper(ABC):
     All site-specific scrapers should inherit from this class.
     """
 
+    # Cached parser to avoid repeated ImportError checks
+    _PREFERRED_PARSER = None
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize the scraper with configuration.
@@ -351,6 +354,33 @@ class BaseScraper(ABC):
             self.logger.debug(f"Saved debug HTML to {filename}")
         except Exception as e:
             self.logger.warning(f"Failed to save debug HTML: {str(e)}")
+
+    def get_soup(self, html: str) -> "BeautifulSoup":
+        """
+        Centralized BeautifulSoup parser that prefers 'lxml' for speed.
+        Falls back to 'html.parser' if 'lxml' is not available.
+
+        Args:
+            html: HTML content to parse
+
+        Returns:
+            BeautifulSoup object
+        """
+        from bs4 import BeautifulSoup
+
+        if BaseScraper._PREFERRED_PARSER is None:
+            try:
+                import lxml  # noqa: F401
+
+                BaseScraper._PREFERRED_PARSER = "lxml"
+                self.logger.debug("Using 'lxml' parser for BeautifulSoup")
+            except ImportError:
+                BaseScraper._PREFERRED_PARSER = "html.parser"
+                self.logger.debug(
+                    "Using 'html.parser' for BeautifulSoup (lxml not found)"
+                )
+
+        return BeautifulSoup(html, BaseScraper._PREFERRED_PARSER)
 
     def close(self):
         """

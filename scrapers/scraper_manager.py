@@ -360,12 +360,14 @@ class ScraperManager:
             True if similar, False otherwise
         """
         # If both have URLs, they're only duplicates if URLs match
-        if listing1.get("url") and listing2.get("url"):
-            return listing1["url"] == listing2["url"]
+        url1 = listing1.get("url")
+        url2 = listing2.get("url")
+        if url1 and url2:
+            return url1 == url2
 
         # Check price similarity (must be within 5% or $50)
-        price1 = listing1.get("price", 0)
-        price2 = listing2.get("price", 0)
+        price1 = listing1.get("price", 0) or 0
+        price2 = listing2.get("price", 0) or 0
 
         if price1 and price2:
             price_diff = abs(price1 - price2)
@@ -374,9 +376,20 @@ class ScraperManager:
             if price_diff > price_threshold:
                 return False  # Prices too different
 
+        # Bolt optimization: Initialize title_similarity to avoid UnboundLocalError
+        # and pre-normalize strings before the nested loop comparisons
+        title_similarity = 0.0
+
         # Check title similarity
-        title1 = (listing1.get("title") or "").lower()
-        title2 = (listing2.get("title") or "").lower()
+        title1 = listing1.get("_norm_title")
+        if title1 is None:
+            title1 = (listing1.get("title") or "").lower().strip()
+            listing1["_norm_title"] = title1
+
+        title2 = listing2.get("_norm_title")
+        if title2 is None:
+            title2 = (listing2.get("title") or "").lower().strip()
+            listing2["_norm_title"] = title2
 
         if title1 and title2:
             title_similarity = self._text_similarity(title1, title2)
@@ -385,11 +398,18 @@ class ScraperManager:
                 return True
 
         # Check location similarity
-        location1 = (listing1.get("location") or "").lower()
-        location2 = (listing2.get("location") or "").lower()
+        loc1 = listing1.get("_norm_loc")
+        if loc1 is None:
+            loc1 = (listing1.get("location") or "").lower().strip()
+            listing1["_norm_loc"] = loc1
 
-        if location1 and location2:
-            location_similarity = self._text_similarity(location1, location2)
+        loc2 = listing2.get("_norm_loc")
+        if loc2 is None:
+            loc2 = (listing2.get("location") or "").lower().strip()
+            listing2["_norm_loc"] = loc2
+
+        if loc1 and loc2:
+            location_similarity = self._text_similarity(loc1, loc2)
 
             # If title and location are both very similar, it's a duplicate
             if (

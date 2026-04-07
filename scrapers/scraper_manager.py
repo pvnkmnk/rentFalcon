@@ -280,6 +280,11 @@ class ScraperManager:
         if not listings:
             return []
 
+        # Pre-calculate normalized values to avoid redundant string operations in the O(n^2) loop
+        for listing in listings:
+            listing["_norm_title"] = (listing.get("title") or "").lower().strip()
+            listing["_norm_loc"] = (listing.get("location") or "").lower().strip()
+
         unique_listings = []
         seen_signatures: Set[str] = set()
 
@@ -303,6 +308,11 @@ class ScraperManager:
             # Add to unique listings
             unique_listings.append(listing)
             seen_signatures.add(signature)
+
+        # Clean up temporary normalization keys
+        for listing in listings:
+            listing.pop("_norm_title", None)
+            listing.pop("_norm_loc", None)
 
         return unique_listings
 
@@ -374,19 +384,20 @@ class ScraperManager:
             if price_diff > price_threshold:
                 return False  # Prices too different
 
-        # Check title similarity
-        title1 = (listing1.get("title") or "").lower()
-        title2 = (listing2.get("title") or "").lower()
+        # Check title similarity - using pre-calculated normalized values
+        title1 = listing1.get("_norm_title")
+        title2 = listing2.get("_norm_title")
 
+        title_similarity = 0.0
         if title1 and title2:
             title_similarity = self._text_similarity(title1, title2)
 
             if title_similarity >= self.similarity_threshold:
                 return True
 
-        # Check location similarity
-        location1 = (listing1.get("location") or "").lower()
-        location2 = (listing2.get("location") or "").lower()
+        # Check location similarity - using pre-calculated normalized values
+        location1 = listing1.get("_norm_loc")
+        location2 = listing2.get("_norm_loc")
 
         if location1 and location2:
             location_similarity = self._text_similarity(location1, location2)
@@ -411,6 +422,9 @@ class ScraperManager:
         Returns:
             Similarity score between 0 and 1
         """
+        # Optimization: short-circuit for exact matches to avoid SequenceMatcher overhead
+        if text1 == text2:
+            return 1.0
         return SequenceMatcher(None, text1, text2).ratio()
 
     def get_available_scrapers(self) -> List[str]:

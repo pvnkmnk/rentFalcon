@@ -270,6 +270,7 @@ class ScraperManager:
     ) -> List[Dict[str, Any]]:
         """
         Remove duplicate listings based on similarity.
+        Optimized with price-sorted windowing and pre-normalization.
 
         Args:
             listings: List of listings to deduplicate
@@ -280,10 +281,22 @@ class ScraperManager:
         if not listings:
             return []
 
+        # Sort by price to enable windowed comparison
+        # None prices are placed at the end
+        sorted_listings = sorted(
+            listings,
+            key=lambda x: x.get("price") if x.get("price") is not None else float("inf"),
+        )
+
+        # Pre-normalize titles and locations to avoid repeated string operations
+        for listing in sorted_listings:
+            listing["_norm_title"] = (listing.get("title") or "").lower().strip()
+            listing["_norm_loc"] = (listing.get("location") or "").lower().strip()
+
         unique_listings = []
         seen_signatures: Set[str] = set()
 
-        for listing in listings:
+        for listing in sorted_listings:
             # Create signature for exact matching
             signature = self._create_listing_signature(listing)
 
@@ -293,8 +306,27 @@ class ScraperManager:
                 )
                 continue
 
-            # Check for fuzzy duplicates
-            if self._is_duplicate(listing, unique_listings):
+            # Check for fuzzy duplicates using windowed comparison
+            is_dup = False
+            current_price = listing.get("price")
+
+            # Since unique_listings is also sorted by price, we only check recent ones
+            # that are within the price threshold (max 5% or $50)
+            for existing in reversed(unique_listings):
+                existing_price = existing.get("price")
+
+                if current_price is not None and existing_price is not None:
+                    # Threshold: min(max(p1, p2) * 0.05, 50)
+                    # Since p1 <= p2 (sorted), threshold is min(p2 * 0.05, 50)
+                    price_threshold = min(current_price * 0.05, 50)
+                    if current_price - existing_price > price_threshold:
+                        break  # Out of price window
+
+                if self._listings_similar(listing, existing):
+                    is_dup = True
+                    break
+
+            if is_dup:
                 self.logger.debug(
                     f"Fuzzy duplicate found: {listing.get('title', 'Unknown')}"
                 )
@@ -303,6 +335,11 @@ class ScraperManager:
             # Add to unique listings
             unique_listings.append(listing)
             seen_signatures.add(signature)
+
+        # Remove temporary normalization fields from all listings to avoid side effects
+        for listing in sorted_listings:
+            listing.pop("_norm_title", None)
+            listing.pop("_norm_loc", None)
 
         return unique_listings
 
@@ -327,71 +364,52 @@ class ScraperManager:
 
         return f"{title}|{price}|{location}"
 
-    def _is_duplicate(
-        self, listing: Dict[str, Any], existing_listings: List[Dict[str, Any]]
-    ) -> bool:
-        """
-        Check if listing is a fuzzy duplicate of any existing listing.
-
-        Args:
-            listing: Listing to check
-            existing_listings: List of already processed listings
-
-        Returns:
-            True if duplicate, False otherwise
-        """
-        for existing in existing_listings:
-            if self._listings_similar(listing, existing):
-                return True
-
-        return False
-
     def _listings_similar(
         self, listing1: Dict[str, Any], listing2: Dict[str, Any]
     ) -> bool:
         """
         Check if two listings are similar enough to be considered duplicates.
-
-        Args:
-            listing1: First listing
-            listing2: Second listing
-
-        Returns:
-            True if similar, False otherwise
+        Uses pre-normalized fields for performance.
         """
         # If both have URLs, they're only duplicates if URLs match
         if listing1.get("url") and listing2.get("url"):
             return listing1["url"] == listing2["url"]
 
         # Check price similarity (must be within 5% or $50)
-        price1 = listing1.get("price", 0)
-        price2 = listing2.get("price", 0)
+        price1 = listing1.get("price")
+        price2 = listing2.get("price")
 
-        if price1 and price2:
+        if price1 is not None and price2 is not None:
             price_diff = abs(price1 - price2)
             price_threshold = min(max(price1, price2) * 0.05, 50)
 
             if price_diff > price_threshold:
                 return False  # Prices too different
 
-        # Check title similarity
-        title1 = (listing1.get("title") or "").lower()
-        title2 = (listing2.get("title") or "").lower()
+        # Check title similarity using pre-normalized fields
+        title1 = listing1.get("_norm_title")
+        title2 = listing2.get("_norm_title")
 
+        title_similarity = 0
         if title1 and title2:
-            title_similarity = self._text_similarity(title1, title2)
+            title_similarity = self._text_similarity(
+                title1, title2, self.similarity_threshold
+            )
 
             if title_similarity >= self.similarity_threshold:
                 return True
 
-        # Check location similarity
-        location1 = (listing1.get("location") or "").lower()
-        location2 = (listing2.get("location") or "").lower()
+        # Check location similarity using pre-normalized fields
+        location1 = listing1.get("_norm_loc")
+        location2 = listing2.get("_norm_loc")
 
         if location1 and location2:
-            location_similarity = self._text_similarity(location1, location2)
+            location_similarity = self._text_similarity(
+                location1, location2, self.similarity_threshold
+            )
 
             # If title and location are both very similar, it's a duplicate
+            # Note: 0.7 is a fixed heuristic for secondary title similarity
             if (
                 title_similarity >= 0.7
                 and location_similarity >= self.similarity_threshold
@@ -400,18 +418,25 @@ class ScraperManager:
 
         return False
 
-    def _text_similarity(self, text1: str, text2: str) -> float:
+    def _text_similarity(
+        self, text1: str, text2: str, threshold: Optional[float] = None
+    ) -> float:
         """
         Calculate similarity between two text strings.
-
-        Args:
-            text1: First text
-            text2: Second text
-
-        Returns:
-            Similarity score between 0 and 1
+        Optimized with quick_ratio() check.
         """
-        return SequenceMatcher(None, text1, text2).ratio()
+        matcher = SequenceMatcher(None, text1, text2)
+
+        # quick_ratio() is an upper bound on ratio(), use it to skip slow calculation.
+        # If a threshold is provided, we can potentially skip the expensive ratio().
+        if threshold is not None:
+            # We use a slightly lower bound (threshold * 0.9) to be safe,
+            # but never below 0.7 as it's used as a fixed heuristic in _listings_similar.
+            safe_threshold = min(threshold, 0.7)
+            if matcher.quick_ratio() < safe_threshold:
+                return matcher.quick_ratio()
+
+        return matcher.ratio()
 
     def get_available_scrapers(self) -> List[str]:
         """

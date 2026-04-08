@@ -1,0 +1,3 @@
+## 2026-04-08 - Optimized Deduplication with Price Windowing
+**Learning:** Fuzzy matching with SequenceMatcher.ratio() is $O(N*M)$ where $N, M$ are string lengths. In a deduplication loop, this becomes $O(n^2)$ comparisons. Sorting listings by a stable numeric field (like price) allows for a "windowed" comparison, drastically reducing the number of fuzzy checks from $n$ to a small constant $k$ (listings within a 5% price range). Additionally, `quick_ratio()` provides a fast upper bound to prune obviously dissimilar strings.
+**Action:** Use domain-specific sorting to implement windowed fuzzy matching. Always pre-normalize strings and use `quick_ratio()` for early exit in similarity checks.

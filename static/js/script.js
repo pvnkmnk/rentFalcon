@@ -1,44 +1,80 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('RentalHunter JS Loaded');
+    console.log('Rental Scanner JS Loaded');
 
     const searchForm = document.getElementById('searchForm');
     const searchButton = document.getElementById('searchButton');
     const searchButtonText = document.getElementById('searchButtonText');
     const searchButtonSpinner = document.getElementById('searchButtonSpinner');
+    const searchIcon = document.getElementById('searchIcon');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     if (searchForm && searchButton) {
         searchForm.addEventListener('submit', function(event) {
-            // Basic validation (though HTML 'required' handles empty location)
-            const locationInput = document.getElementById('location');
-            if (locationInput && locationInput.value.trim() === '') {
-                // Optionally, add more sophisticated client-side validation here
-                // For now, relying on 'required' attribute.
+            // Show overlay
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
             }
 
             // Show spinner and disable button
-            if(searchButtonText && searchButtonSpinner) {
+            if (searchButtonText) {
                 searchButtonText.textContent = 'Searching...';
-                searchButtonSpinner.classList.remove('d-none'); // Show spinner
+            }
+            if (searchButtonSpinner) {
+                searchButtonSpinner.classList.remove('d-none');
+            }
+            if (searchIcon) {
+                searchIcon.classList.add('d-none');
             }
             searchButton.disabled = true;
-            
-            // Optional: Clear previous results or show a loading message in results area
-            const resultsArea = document.getElementById('resultsArea');
-            if(resultsArea) {
-                // resultsArea.innerHTML = '<p class="text-center text-muted mt-3">Loading results...</p>';
-            }
         });
     }
 
-    // Re-enable button if the page is reloaded (e.g., back button after submission)
-    // This helps if the form submission was interrupted or if the user navigates back.
-    window.addEventListener('pageshow', function(event) {
-        if (searchButton && searchButton.disabled) {
-            if(searchButtonText && searchButtonSpinner) {
-                searchButtonText.textContent = 'Search Listings';
-                searchButtonSpinner.classList.add('d-none'); // Hide spinner
-            }
+    // Handle back/forward button and page load
+    function resetSearchUI() {
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
+        if (searchButton) {
             searchButton.disabled = false;
+            if (searchButtonText) {
+                searchButtonText.textContent = 'Search All Sources';
+            }
+            if (searchButtonSpinner) {
+                searchButtonSpinner.classList.add('d-none');
+            }
+            if (searchIcon) {
+                searchIcon.classList.remove('d-none');
+            }
+        }
+    }
+
+    window.addEventListener('pageshow', resetSearchUI);
+    window.addEventListener('load', resetSearchUI);
+});
+
+// Sort listings by price
+function sortListings(by) {
+    const container = document.querySelector('.results-card .card-body');
+    const listings = Array.from(document.querySelectorAll('.listing-card'));
+
+    if (by === 'price') {
+        listings.sort((a, b) => {
+            return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+        });
+    }
+
+    listings.forEach(listing => container.appendChild(listing));
+}
+
+// Filter by source
+function filterBySource(source) {
+    const listings = document.querySelectorAll('.listing-card');
+
+    listings.forEach(listing => {
+        if (source === 'all' || listing.dataset.source === source) {
+            listing.style.display = 'block';
+        } else {
+            listing.style.display = 'none';
         }
     });
-});
+}

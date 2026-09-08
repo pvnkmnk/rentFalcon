@@ -1,4 +1,5 @@
 import os
+import secrets
 from datetime import timedelta
 
 
@@ -6,7 +7,9 @@ class Config:
     """Base configuration class"""
 
     # Flask Configuration
-    SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-secret-key-change-in-production"
+    # SECRET_KEY must come from the environment; ephemeral random fallback
+    # keeps local dev working (sessions reset on restart). Never hardcode.
+    SECRET_KEY = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
     DEBUG = False
     TESTING = False
 

@@ -4,9 +4,12 @@ Multi-source rental listing search powered by Scraper Manager
 """
 
 import logging
+import os
+import secrets
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 
 from scrapers.scraper_manager import ScraperManager
 
@@ -18,7 +21,19 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-secret-key-change-in-production"
+# SECRET_KEY must come from the environment (see .env.example). If unset we
+# fall back to an ephemeral random key so local dev keeps working, but every
+# restart then invalidates sessions — production should always set it.
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+if not os.environ.get("SECRET_KEY"):
+    logger.warning(
+        "SECRET_KEY not set — using an ephemeral random key. Sessions will not "
+        "survive restarts; set SECRET_KEY in the environment (see .env.example)."
+    )
+
+# CSRF protection for all state-changing routes (form + JSON API).
+# Flask-WTF is already declared in requirements.txt.
+csrf = CSRFProtect(app)
 
 # Initialize Scraper Manager with configuration
 # This runs once at startup
@@ -144,9 +159,24 @@ def index():
     )
 
 
+@app.route("/api/csrf-token", methods=["GET"])
+def api_csrf_token():
+    """Return a fresh CSRF token for programmatic clients.
+
+    JSON clients must send it back as the X-CSRFToken header on state-changing
+    requests (e.g. POST /api/search). The response also sets the session
+    cookie that the token is bound to.
+    """
+    return jsonify({"token": generate_csrf()}), 200
+
+
 @app.route("/api/search", methods=["POST"])
 def api_search():
-    """API endpoint for programmatic access"""
+    """API endpoint for programmatic access.
+
+    CSRF-protected: clients must send the X-CSRFToken header (obtain a token
+    from GET /api/csrf-token first).
+    """
     try:
         data = request.get_json()
 

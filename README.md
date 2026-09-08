@@ -59,9 +59,16 @@ cd rentFalcon
 # Install dependencies
 pip install -r requirements.txt
 
+# Copy the environment template and set a real secret key
+cp .env.example .env
+#   SECRET_KEY is REQUIRED for stable sessions. Generate one with:
+#   python -c "import secrets; print(secrets.token_hex(32))"
+
 # Run the application
 python app.py
 ```
+
+> **Security:** `SECRET_KEY` is read from the environment. If unset, the app falls back to an ephemeral random key (sessions reset on restart) — fine for local dev, never for production. All state-changing routes are CSRF-protected via Flask-WTF; programmatic clients must fetch a token from `GET /api/csrf-token` and send it as the `X-CSRFToken` header.
 
 Visit `http://localhost:5000` in your browser.
 

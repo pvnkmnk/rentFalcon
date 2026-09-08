@@ -1,0 +1,55 @@
+# Auto-close superseded agent PR iterations.
+#
+# Agent bots (Bolt, Palette, Sentinel, …) re-iterate on the same theme in
+# near-duplicate PRs. Policy: **at most one open PR per agent theme** —
+# whenever a new agent PR opens, every older open PR of that theme is closed
+# with a comment pointing at the successor. This repo previously accumulated
+# 70+ duplicate iterations; this workflow prevents recurrence.
+#
+# Exceptions:
+#   - Add the `no-autoclose` label to a PR to keep it open.
+#   - Dependabot and human branches never match the agent theme matcher.
+#
+# Manual sweep: Actions -> Supersede agent PR iterations -> Run workflow
+# (dry-run by default; tick the box to actually close).
+
+name: Supersede agent PR iterations
+
+on:
+  pull_request:
+    types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: only report what would be closed"
+        type: boolean
+        default: true
+
+permissions:
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: supersede-agent-prs
+  cancel-in-progress: false
+
+jobs:
+  supersede:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Close superseded agent iterations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Real run on the PR-open trigger (the just-opened PR is the newest
+          # in its theme and survives); manual runs default to dry-run.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="--dry-run"
+            if [ "${{ inputs.dry_run }}" = "false" ]; then MODE=""; fi
+          else
+            MODE=""
+          fi
+          python3 .github/scripts/supersede_agent_prs.py --repo "$REPO" $MODE

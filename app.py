@@ -26,6 +26,13 @@ app = Flask(__name__)
 # restart then invalidates sessions — production should always set it.
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 if not os.environ.get("SECRET_KEY"):
+    # Containerized deployments (FLASK_ENV=docker, see deployment/docker-compose.yml)
+    # must be loud about a missing key instead of silently degrading.
+    if os.environ.get("FLASK_ENV") == "docker":
+        raise SystemExit(
+            "SECRET_KEY must be set in the environment for containerized deployments. "
+            "Copy deployment/.env.example to .env and set a strong value."
+        )
     logger.warning(
         "SECRET_KEY not set — using an ephemeral random key. Sessions will not "
         "survive restarts; set SECRET_KEY in the environment (see .env.example)."

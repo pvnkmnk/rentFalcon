@@ -52,7 +52,7 @@ services:
       # Flask Configuration
       FLASK_APP: app.py
       FLASK_ENV: ${FLASK_ENV:-docker}
-      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env (see deployment/.env.example)}
 
       # Database Configuration
       DATABASE_URL: postgresql://${POSTGRES_USER:-rental_user}:${POSTGRES_PASSWORD:-rental_pass}@db:5432/${POSTGRES_DB:-rental_scanner}
@@ -118,7 +118,7 @@ services:
       # Flask Configuration
       FLASK_APP: app.py
       FLASK_ENV: ${FLASK_ENV:-docker}
-      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env (see deployment/.env.example)}
 
       # Database Configuration
       DATABASE_URL: postgresql://${POSTGRES_USER:-rental_user}:${POSTGRES_PASSWORD:-rental_pass}@db:5432/${POSTGRES_DB:-rental_scanner}
@@ -167,7 +167,7 @@ services:
       # Flask Configuration
       FLASK_APP: app.py
       FLASK_ENV: ${FLASK_ENV:-docker}
-      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set in .env (see deployment/.env.example)}
 
       # Database Configuration
       DATABASE_URL: postgresql://${POSTGRES_USER:-rental_user}:${POSTGRES_PASSWORD:-rental_pass}@db:5432/${POSTGRES_DB:-rental_scanner}

@@ -1,0 +1,46 @@
+# rentFalcon -- mise en place for this checkout.
+#
+# Scope discipline: this file declares the surface `AGENTS.md` and `README.md`
+# already document. Every task is a one-line wrapper around a command that
+# exists; nothing is moved here, and `python app.py` still works exactly as
+# before.
+#
+# No [tools] block on purpose. `requirements.txt` already pins every dependency,
+# and the docs disagree about the interpreter (README badge says 3.8+, its
+# architecture section says 3.13). A pin here would pick a side of that
+# contradiction and could break `psycopg2-binary`, so the version stays where the
+# package pins are.
+
+[env]
+# Non-secret values, each matching the default already in config.py so that
+# `mise run` and a bare `python app.py` cannot disagree.
+FLASK_ENV = "development"
+DATABASE_URL = "sqlite:///rental_scanner.db"
+LOG_LEVEL = "INFO"
+LISTING_EXPIRY_DAYS = "7"
+
+# Deliberately absent -- secrets, never stored in a tracked file. `.env.example`
+# is the reference; they belong in `fnox` (or a gitignored `.env`):
+#   SECRET_KEY            required for stable sessions; unset means an ephemeral
+#                         key and every restart drops the sessions
+#   MAIL_USERNAME         SMTP credential
+#   MAIL_PASSWORD         SMTP credential
+#   REDIS_URL             may embed a password when it is not plain localhost
+#   FACEBOOK_ACCESS_TOKEN API credential
+#   RAPIDAPI_KEY          API credential
+
+[tasks.install]
+description = "Install dependencies from requirements.txt (uv, as the workspace prefers)"
+run = "uv pip install -r requirements.txt"
+
+[tasks.run]
+description = "Dev server on 0.0.0.0:5000"
+run = "python app.py"
+
+[tasks.test]
+description = "Scraper and security tests"
+run = "pytest test_scrapers.py test_security.py"
+
+[tasks.setup]
+description = "One-click installer for non-technical users (Windows only; part of the user-facing contract)"
+run = "EASY_SETUP.bat"

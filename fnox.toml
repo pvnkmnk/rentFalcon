@@ -1,0 +1,22 @@
+# Committed by design: this file holds ciphertext only. The identity that
+# decrypts it is not in the repo.
+#
+# Run secret-bearing tasks with `fnox exec -- mise run <task>`. mise's [env]
+# block in this repo holds non-secret values only, and `.env` stays gitignored
+# and is never committed.
+#
+# Deliberately absent, because no generator can invent them -- the real values
+# are external accounts. Add each with `fnox set -p age <NAME>` when you need it:
+#   * MAIL_USERNAME / MAIL_PASSWORD -- the SMTP account. Without them mail is
+#     disabled (config.py MAIL_ENABLED defaults off), which is a valid state.
+#   * FACEBOOK_ACCESS_TOKEN -- the marketplace scraper's credential.
+#   * RAPIDAPI_KEY -- the aggregator API key.
+#   * REDIS_URL -- may embed a password when it is not plain localhost, which is
+#     why it is not stored here as a fixed value.
+
+[providers.age]
+type = "age"
+recipients = ["age1846shjkjn76w4fy9azpq55jpfeu4un9jl7q4rj9a42fl37tpm3ss0j2c6y"]
+
+[secrets]
+SECRET_KEY= { provider = "age", value = "YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJQW1KcTRSWndEemQ4TmdxZUJ5dTR4T3RDUmZUN010MDFQcnpUU05rL0RFCkJ4UloyRGZDc0tFN0IwMkJ5TTV6RUl5ZHRpMXBwUEtNSDNNaUhnYjdSZlkKLT4gdFwtZ3JlYXNlIHV4IF1VITggQjthJEBeIHk7CnU5VVoyUyt0UktuR0JvbXdsMXFIZms1RlZ5WG4yem50cGdxR3o5a3MxUFJlYis0a3g1Rm4rWDBLOThSVXJzZnEKd2Z0OVZQbnc2bUhQbzJYNm80cWtPRHVtd0FKVVg5MAotLS0gYkpiQmlpdnpubTZrbGRERm1EMWxVN2hpMmpqcjIwd2ZVQ1JhT2Zlb2I3RQo1WK8dC79j4nXPR4FxrSCs9Cm/SHWXH4lH1ENmxZiv3u0107rPcEr+N2DWwrAPLGM6Aqd8j3jxqFPOHE3KcWFkqt7DvNoUk8KG+UeHymWddVIFVfQ/w0CjmDL7b3XEsHc=", description = "generated dev value 2026-10-29; production refuses to start without a real one" }
